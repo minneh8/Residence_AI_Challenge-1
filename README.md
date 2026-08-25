@@ -69,10 +69,10 @@ Para garantir interpretabilidade e clareza aos usuários, o sistema integrará p
 
 ```bash
 # 1. Clonar o repositório
-git clone [https://github.com/SEU-USUARIO/NOME-DO-REPOSIOTORIO.git](https://github.com/SEU-USUARIO/NOME-DO-REPOSIOTORIO.git)
+git clone [https://github.com/minneh8/Residence_AI_Challenge-1]
 
 # 2. Acessar a pasta
-cd NOME-DO-REPOSIOTORIO
+cd NOME-DO-REPOSITORIO
 
 # 3. Criar e ativar ambiente virtual
 python -m venv venv
