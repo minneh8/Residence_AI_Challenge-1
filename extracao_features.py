@@ -1,14 +1,14 @@
 """
 extracao_features.py
 ---------------------
-Arquivo único com toda a extração de features do dataset DUAT a partir do
-texto puro de uma notícia. Junta o que antes estava em três arquivos
+Arquivo único que transforma o texto puro de uma notícia nas features do
+dataset DUAT, já normalizadas. Junta o que antes estava em quatro arquivos
 separados (features_prontas.py + features_gramaticais.py +
-montar_dataset_completo.py), pensado para ser reaproveitado depois na
-extração de features de notícias que o usuário for colocando (uma a uma ou
-em lote).
+montar_dataset_completo.py + padronizar_normalizar.py), pensado para ser
+reaproveitado depois na extração de features de notícias que o usuário for
+colocando (uma a uma ou em lote).
 
-Contém três blocos:
+Contém quatro blocos:
 
   1. FEATURES PRONTAS — funções que já existiam em montar_dataset_duat.py
      (palavras sensacionalistas, fontes citadas, estudos prévios citados,
@@ -22,8 +22,19 @@ Contém três blocos:
 
   3. MONTAGEM DO DATASET — junta os dois blocos acima, calcula as
      proporções (contagem / num_palavras) e devolve o DataFrame final, na
-     mesma ordem de colunas usada no projeto (ainda em escala bruta — a
-     normalização 0-1 e o float32 continuam em padronizar_normalizar.py).
+     mesma ordem de colunas usada no projeto (ainda em escala bruta).
+
+  4. NORMALIZAÇÃO — min-max scaling (0 a 1) por coluna e conversão para
+     float32. A coluna 'rotulo' (binária, 0/1) só é convertida para
+     float32, sem normalização:
+
+         valor_normalizado = (valor - min_da_coluna) / (max_da_coluna - min_da_coluna)
+
+     O min/max usado é sempre o do DataFrame passado. Por isso a
+     normalização fica separada da montagem: para juntar dois datasets,
+     concatena-se as versões BRUTAS e só depois normaliza o conjunto
+     (ver concatenacao_dataset.py). Normalizar antes de concatenar faria os
+     valores ficarem normalizados duas vezes / em escalas diferentes.
 
 A coluna 'categoria' NÃO é usada (removida por decisão do time).
 
@@ -44,19 +55,22 @@ Detalhes da validação (correlação/MAE contra o dataset já pronto) estão no
 relatorio_validacao.md.
 
 Uso via linha de comando:
-    python extracao_features.py entrada.csv saida_bruto.csv
+    python extracao_features.py entrada.csv saida.csv           # features normalizadas (float32)
+    python extracao_features.py entrada.csv saida.csv --bruto   # features em escala bruta
 
 Uso em Python (é o jeito recomendado para aplicar em notícias novas):
     import pandas as pd
-    from extracao_features import montar_dataset
+    from extracao_features import montar_dataset, padronizar_dataframe
 
     df = pd.read_csv('minhas_noticias.csv')   # precisa ter a coluna 'texto'
-    df_bruto = montar_dataset(df)
+    df_bruto = montar_dataset(df)              # features em escala bruta
+    df_final = padronizar_dataframe(df_bruto)  # 0 a 1 + float32
 """
 
 import re
 import sys
 
+import numpy as np
 import pandas as pd
 import spacy
 from spellchecker import SpellChecker
@@ -64,7 +78,6 @@ from spellchecker import SpellChecker
 
 # ============================================================
 # BLOCO 1 — FEATURES PRONTAS
-# (refatorado de montar_dataset_duat.py)
 # ============================================================
 
 PALAVRAS_SENSACIONALISTAS = [
@@ -313,7 +326,7 @@ def montar_dataset(df_entrada: pd.DataFrame, verbose: bool = True) -> pd.DataFra
     """Recebe um DataFrame com a coluna 'texto' (e opcionalmente
     'rotulo'/'label') e devolve o dataset final com todas as features,
     ainda em escala bruta (não normalizada — isso é feito depois por
-    padronizar_normalizar.py)."""
+    padronizar_dataframe)."""
     df_entrada = df_entrada.copy()
     df_entrada.columns = df_entrada.columns.str.strip()  # ex.: 'texto  ' -> 'texto'
 
@@ -384,13 +397,73 @@ def montar_dataset(df_entrada: pd.DataFrame, verbose: bool = True) -> pd.DataFra
     return df_final
 
 
+# ============================================================
+# BLOCO 4 — NORMALIZAÇÃO (0 a 1) E CONVERSÃO PARA FLOAT32
+# ============================================================
+
+# Coluna que já é 0/1 por natureza — não normalizar
+COLUNAS_BINARIAS_EXATAS = {'rotulo'}
+
+
+def _eh_binaria(col: str) -> bool:
+    return col in COLUNAS_BINARIAS_EXATAS
+
+
+def normalizar_min_max(df: pd.DataFrame, colunas=None) -> pd.DataFrame:
+    """Aplica min-max scaling (0 a 1) nas colunas numéricas informadas
+    (ou em todas as numéricas não-binárias, se colunas=None)."""
+    df = df.copy()
+    if colunas is None:
+        colunas = [c for c in df.select_dtypes(include=[np.number]).columns
+                   if not _eh_binaria(c)]
+
+    for col in colunas:
+        minimo = df[col].min()
+        maximo = df[col].max()
+        amplitude = maximo - minimo
+        if amplitude == 0 or pd.isna(amplitude):
+            df[col] = 0.0
+        else:
+            df[col] = (df[col] - minimo) / amplitude
+
+    return df
+
+
+def padronizar_dataframe(df: pd.DataFrame, normalizar: bool = True,
+                          verbose: bool = True) -> pd.DataFrame:
+    """Normaliza (0 a 1) e converte as colunas numéricas para float32.
+    Serve tanto para um DataFrame só de notícias novas quanto para um já
+    concatenado (novas + antigo bruto) — o min/max usado é sempre o do
+    DataFrame que for passado aqui."""
+    colunas_numericas = df.select_dtypes(include=[np.number]).columns.tolist()
+    if not colunas_numericas:
+        raise ValueError("Nenhuma coluna numérica encontrada no dataset.")
+
+    if verbose:
+        print(f"Colunas numéricas identificadas ({len(colunas_numericas)}):")
+        for c in colunas_numericas:
+            marcador = " (binária, sem normalização)" if _eh_binaria(c) else ""
+            print(f"  - {c}{marcador}")
+
+    df_proc = normalizar_min_max(df) if normalizar else df.copy()
+
+    for col in colunas_numericas:
+        df_proc[col] = df_proc[col].astype(np.float32)
+
+    return df_proc
+
+
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print("Uso: python extracao_features.py entrada.csv saida.csv")
+    args = [a for a in sys.argv[1:] if a != '--bruto']
+    bruto = '--bruto' in sys.argv[1:]
+    if len(args) < 2:
+        print("Uso: python extracao_features.py entrada.csv saida.csv [--bruto]")
         sys.exit(1)
 
-    caminho_entrada, caminho_saida = sys.argv[1], sys.argv[2]
+    caminho_entrada, caminho_saida = args[0], args[1]
     df_in = pd.read_csv(caminho_entrada)
     df_out = montar_dataset(df_in)
-    df_out.to_csv(caminho_saida, index=False)
+    if not bruto:
+        df_out = padronizar_dataframe(df_out)
+    df_out.to_csv(caminho_saida, index=False, float_format=None if bruto else "%.6g")
     print(f"Salvo em: {caminho_saida}")

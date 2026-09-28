@@ -1,6 +1,6 @@
 """
-reduzir_para_texto_rotulo.py
--------------------------------
+reducao_dataset.py
+------------------
 Recebe um dataset "bruto" que já tem várias colunas de feature prontas
 (por exemplo o formato do dataset_antigo_bruto.csv, ou qualquer CSV com
 'texto', 'rotulo' e outras colunas) e devolve só 'texto' + 'rotulo'.
@@ -11,11 +11,11 @@ assim os dois lados (antigo + notícias novas) ficam calculados com a mesma
 metodologia antes de concatenar e normalizar.
 
 Uso:
-    python reduzir_para_texto_rotulo.py entrada.csv saida.csv
+    python reducao_dataset.py entrada.csv saida.csv
 
 Em Python:
     import pandas as pd
-    from reduzir_para_texto_rotulo import reduzir_para_texto_rotulo
+    from reducao_dataset import reduzir_para_texto_rotulo
 
     df = pd.read_csv('dataset_bruto_antigo.csv')
     df_reduzido = reduzir_para_texto_rotulo(df)
@@ -52,7 +52,7 @@ def reduzir_para_texto_rotulo(df: pd.DataFrame, verbose: bool = True) -> pd.Data
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print("Uso: python reduzir_para_texto_rotulo.py entrada.csv saida.csv")
+        print("Uso: python reducao_dataset.py entrada.csv saida.csv")
         sys.exit(1)
 
     caminho_entrada, caminho_saida = sys.argv[1], sys.argv[2]
