@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import main as mn
-import pagina2 as pg2
 try:
     from PIL import Image, ImageTk
     # Pillow está instalada: guardamos essa informação numa flag
@@ -221,7 +220,7 @@ def mostrar_pagina_3(texto_noticia):
 
     # Ao clicar (na forma ou no texto), vai para a página 2 levando a notícia digitada
     def ir_para_pagina_2(event):
-        pg2.mostrar_pagina_2(texto_noticia)
+        mn.mostrar_pagina_2(texto_noticia)
 
     # Mouse sobre o botão: cursor de mãozinha e cor mais escura
     def entrar_avancar(event):

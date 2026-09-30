@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import main as mn 
-import pagina3 as pg3
 
 try:
     from PIL import Image, ImageTk
