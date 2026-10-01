@@ -1,71 +1,32 @@
-# DUAT Backend
+# DUAT Backend + Frontend
 
-API FastAPI preparada para integração com o frontend HTML/CSS/JavaScript e para receber os pipelines SVM, K-Means, DBSCAN e Isolation Forest.
+A aplicação possui uma API FastAPI e um frontend estático em HTML/CSS/JavaScript.
 
-## Instalação
+## Rodar localmente
 
 Na raiz do repositório:
 
 ```bash
 python -m venv .venv
+# Windows PowerShell
+.venv\\Scripts\\Activate.ps1
 # Linux/macOS
 source .venv/bin/activate
-# Windows
-.venv\\Scripts\\activate
 pip install -r backend/requirements.txt
-```
-
-## Executar
-
-```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Documentação: `http://localhost:8000/docs`.
+Em outro terminal, sirva o frontend:
 
-## Endpoints para o frontend
-
-### Status dos pipelines
-
-```http
-GET /pipelines
+```bash
+python -m http.server 5500 --directory frontend
 ```
 
-### Classificação
+Abra `http://localhost:5500`. A API fica em `http://localhost:8000/docs`.
 
-```http
-POST /predict
-Content-Type: application/json
-```
+## Pipelines
 
-```json
-{
-  "text": "Texto completo da notícia.",
-  "pipeline": "svm"
-}
-```
-
-Valores aceitos para `pipeline`: `svm` e `kmeans`. O K-Means retorna o cluster técnico; a equipe deve definir no frontend a interpretação dos clusters após avaliar seus centróides.
-
-### Anomalias
-
-```http
-POST /anomaly
-Content-Type: application/json
-```
-
-```json
-{
-  "text": "Texto completo da notícia.",
-  "pipeline": "isolation_forest"
-}
-```
-
-Valores aceitos: `dbscan` e `isolation_forest`.
-
-## Instalação dos modelos
-
-Coloque os arquivos `.joblib` em `backend/app/models/`:
+Coloque os artefatos treinados em `backend/app/models/`:
 
 ```text
 svm.joblib
@@ -74,19 +35,38 @@ dbscan.joblib
 isolation_forest.joblib
 ```
 
-O carregamento ocorre quando a API inicia. Depois de adicionar ou substituir os arquivos, reinicie o Uvicorn.
+Reinicie a API depois de colocar ou substituir os arquivos. Consulte o status em `http://localhost:8000/pipelines`.
 
-## Exemplo JavaScript
+## Contrato usado pelo frontend
 
-```javascript
-const response = await fetch('http://localhost:8000/predict', {
-  method: 'POST',
-  headers: {'Content-Type': 'application/json'},
-  body: JSON.stringify({text: texto, pipeline: 'svm'})
-});
-const resultado = await response.json();
+Classificação com SVM ou K-Means:
+
+```http
+POST /predict
+Content-Type: application/json
 ```
 
-Para DBSCAN e Isolation Forest, use `/anomaly`.
+```json
+{"text":"Texto da notícia", "pipeline":"svm"}
+```
 
-Sem artefatos treinados, a API mantém o contrato ativo e informa `model_loaded: false`. Não use o fallback como resultado científico; ele existe somente para testar a integração.
+Detecção com DBSCAN ou Isolation Forest:
+
+```http
+POST /anomaly
+Content-Type: application/json
+```
+
+```json
+{"text":"Texto da notícia", "pipeline":"isolation_forest"}
+```
+
+## CORS
+
+Por padrão, o backend permite o frontend local. Para restringir origens:
+
+```bash
+DUAT_CORS_ORIGINS=http://localhost:5500 uvicorn backend.app.main:app --reload --port 8000
+```
+
+Sem artefatos treinados, a interface informa que está em modo de desenvolvimento. Não use o fallback como resultado científico.
