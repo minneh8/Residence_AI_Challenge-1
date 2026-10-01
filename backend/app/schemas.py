@@ -1,6 +1,8 @@
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional
 
 from pydantic import BaseModel, Field
+
+PipelineName = Literal['svm', 'kmeans', 'dbscan', 'isolation_forest']
 
 
 class FeatureRequest(BaseModel):
@@ -8,15 +10,31 @@ class FeatureRequest(BaseModel):
 
 
 class PredictionRequest(FeatureRequest):
+    pipeline: PipelineName = 'svm'
     features: Optional[Dict[str, float]] = None
 
 
 class PredictionResponse(BaseModel):
-    label: int
+    pipeline: str
+    label: Optional[int] = None
     classification: str
-    fake_probability: float
-    true_probability: float
-    confidence: float
+    fake_probability: Optional[float] = None
+    true_probability: Optional[float] = None
+    confidence: Optional[float] = None
     features: Dict[str, float]
     explanation: list[str]
+    model_loaded: bool
+
+
+class AnomalyRequest(FeatureRequest):
+    pipeline: Literal['dbscan', 'isolation_forest'] = 'isolation_forest'
+    features: Optional[Dict[str, float]] = None
+
+
+class AnomalyResponse(BaseModel):
+    pipeline: str
+    anomaly: bool
+    score: Optional[float] = None
+    cluster: Optional[int] = None
+    features: Dict[str, float]
     model_loaded: bool

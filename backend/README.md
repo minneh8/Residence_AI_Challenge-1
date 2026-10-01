@@ -1,6 +1,6 @@
 # DUAT Backend
 
-API FastAPI para extração de características e classificação de notícias.
+API FastAPI preparada para integração com o frontend HTML/CSS/JavaScript e para receber os pipelines SVM, K-Means, DBSCAN e Isolation Forest.
 
 ## Instalação
 
@@ -15,47 +15,78 @@ source .venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-## Treinar o modelo
-
-O dataset `dataset_duat_final.csv` deve estar na raiz do repositório:
-
-```bash
-cd backend
-python train_model.py
-```
-
-O modelo é gerado em `backend/app/models/duat_model.joblib`. Esse artefato é ignorado pelo Git; o treinamento deve ser executado no ambiente de implantação.
-
-## Executar a API
-
-Na raiz do projeto:
+## Executar
 
 ```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Documentação interativa: `http://localhost:8000/docs`.
+Documentação: `http://localhost:8000/docs`.
 
-## Endpoints
+## Endpoints para o frontend
 
-### `GET /health`
+### Status dos pipelines
 
-Verifica se a API está funcionando e se um modelo treinado foi carregado.
-
-### `POST /features`
-
-```json
-{"text": "Texto da notícia com pelo menos vinte caracteres."}
+```http
+GET /pipelines
 ```
 
-### `POST /predict`
+### Classificação
 
-```json
-{"text": "Texto da notícia com pelo menos vinte caracteres."}
+```http
+POST /predict
+Content-Type: application/json
 ```
 
-Também é possível enviar `features` calculadas pelo cliente, desde que todas as 18 features do modelo estejam presentes. O endpoint retorna rótulo, probabilidades, confiança, features e explicações básicas.
+```json
+{
+  "text": "Texto completo da notícia.",
+  "pipeline": "svm"
+}
+```
 
-## Observação
+Valores aceitos para `pipeline`: `svm` e `kmeans`. O K-Means retorna o cluster técnico; a equipe deve definir no frontend a interpretação dos clusters após avaliar seus centróides.
 
-Sem o artefato treinado, a API utiliza um fallback heurístico apenas para manter o fluxo de desenvolvimento funcionando. Para resultados reais, execute `python backend/train_model.py` antes de publicar a aplicação.
+### Anomalias
+
+```http
+POST /anomaly
+Content-Type: application/json
+```
+
+```json
+{
+  "text": "Texto completo da notícia.",
+  "pipeline": "isolation_forest"
+}
+```
+
+Valores aceitos: `dbscan` e `isolation_forest`.
+
+## Instalação dos modelos
+
+Coloque os arquivos `.joblib` em `backend/app/models/`:
+
+```text
+svm.joblib
+kmeans.joblib
+dbscan.joblib
+isolation_forest.joblib
+```
+
+O carregamento ocorre quando a API inicia. Depois de adicionar ou substituir os arquivos, reinicie o Uvicorn.
+
+## Exemplo JavaScript
+
+```javascript
+const response = await fetch('http://localhost:8000/predict', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({text: texto, pipeline: 'svm'})
+});
+const resultado = await response.json();
+```
+
+Para DBSCAN e Isolation Forest, use `/anomaly`.
+
+Sem artefatos treinados, a API mantém o contrato ativo e informa `model_loaded: false`. Não use o fallback como resultado científico; ele existe somente para testar a integração.
