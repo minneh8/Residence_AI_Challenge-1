@@ -7,11 +7,22 @@ from .schemas import AnomalyRequest, AnomalyResponse, FeatureRequest, Prediction
 from .services.feature_extractor import extract_features
 from .services.predictor import Predictor
 
-app = FastAPI(title='DUAT API', version='1.3.0')
+app = FastAPI(title='DUAT API', version='1.3.1')
 origins = [origin.strip() for origin in os.getenv('DUAT_CORS_ORIGINS', '*').split(',') if origin.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False, allow_methods=['*'], allow_headers=['*'])
 
 predictor = Predictor()
+
+
+@app.get('/')
+def root():
+    return {
+        'service': 'DUAT API',
+        'status': 'ok',
+        'docs': '/docs',
+        'health': '/health',
+        'pipelines': '/pipelines',
+    }
 
 
 @app.get('/health')
