@@ -2,45 +2,133 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DUAT - Análise de Notícias</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DUAT</title>
+  <link rel="shortcut icon" href="DUAT.png" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="container">
-    <header>
-      <img src="DUAT.png" alt="Logo DUAT" class="logo">
-      <h1>DUAT</h1>
-      <p>Analise características textuais de uma notícia.</p>
-    </header>
+  <!-- ORDEM DAS TELAS: pagina1 → pagina3 → pagina4 → pagina2 → pagina5 → pagina6 (modelo concorda) ou pagina7 (modelo discorda) -->
 
-    <form id="news-form">
-      <label for="news-text">Texto da notícia</label>
-      <textarea id="news-text" name="news-text" rows="14" minlength="20" required placeholder="Cole aqui o texto completo da notícia..."></textarea>
+  <!-- PÁGINA 1: entrada da notícia -->
+  <section id="pagina1" class="pagina ativa centro">
+    <img src="DUAT.png" alt="DUAT" class="logo-grande">
+    <div class="linha-envio">
+      <input id="entrada" type="text" placeholder="Digite sua notícia para ser avaliada..." autocomplete="off">
+      <button id="btn-enviar" class="botao">Enviar</button>
+    </div>
+  </section>
 
-      <label for="pipeline-select">Pipeline</label>
-      <select id="pipeline-select" name="pipeline">
-        <option value="svm">SVM — classificação</option>
-        <option value="kmeans">K-Means — clusterização</option>
-        <option value="dbscan">DBSCAN — anomalias</option>
-        <option value="isolation_forest">Isolation Forest — anomalias</option>
-      </select>
+  <!-- PÁGINA 3: tabela de features + botão Avançar -->
+  <section id="pagina3" class="pagina">
+    <button id="btn-voltar" class="btn-voltar" title="Voltar">←</button>
+    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
+    <h1>Explicação das Features</h1>
+    <div class="tabela-box centro-abs"><div class="tabela-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Features</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody class="corpo-tabela">
+          
+        </tbody>
+      </table>
+    </div></div>
+    <button id="btn-avancar" class="botao btn-avancar">Avançar</button>
+  </section>
 
-      <button id="analyze-button" type="submit">Analisar notícia</button>
-    </form>
+  <!-- PÁGINA 2: notícia enviada + tabela de features -->
+  <section id="pagina2" class="pagina">
+    <button id="btn-voltar-2" class="btn-voltar" title="Voltar">←</button>
+    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
+    <h1>Análise da notícia</h1>
+    <div class="noticia">
+      <span class="rotulo">Notícia enviada:</span>
+      <div id="texto-noticia" class="caixa-noticia"></div>
+    </div>
 
-    <p id="model-status" class="model-status">Verificando pipelines...</p>
-    <p id="status" class="status" aria-live="polite"></p>
+    <div id="vista-tabela" class="tabela-box"><div class="tabela-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Features</th>
+            <th>Valor</th>
+            </tr>
+        </thead>
+        <tbody class="corpo-tabela">
 
-    <section id="result" class="result hidden" aria-live="polite">
-      <h2 id="classification"></h2>
-      <p>Probabilidade falsa: <strong id="fake-probability">Indisponível</strong></p>
-      <p>Probabilidade verdadeira: <strong id="true-probability">Indisponível</strong></p>
-      <p>Confiança/score: <strong id="confidence">Indisponível</strong></p>
-      <h3>Detalhes</h3>
-      <ul id="explanation"></ul>
-    </section>
-  </main>
+        </tbody>
+      </table>
+    </div></div>
+    <!-- Vista de gráficos: dois espaços iguais e centralizados -->
+    <div id="vista-graficos" class="graficos">
+      <div id="grafico-1" class="grafico-box">Gráfico 1</div>
+      <div id="grafico-2" class="grafico-box">Gráfico 2</div>
+    </div>
+    <button id="btn-ver-tabela" class="botao btn-aba ativo">Tabela</button>
+    <button id="btn-ver-graficos" class="botao btn-aba">Gráficos</button>
+    <button id="btn-avancar-2" class="botao btn-avancar">Avançar</button>
+  </section>
+
+  <!-- PÁGINA 4: exemplos de notícias (10 notícias: 5 verdadeiras e 5 falsas) -->
+  <section id="pagina4" class="pagina">
+    <button id="btn-voltar-4" class="btn-voltar" title="Voltar">←</button>
+    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
+    <h1>Exemplo de Notícias</h1>
+    <div class="tabela-box tabela-exemplos centro-abs"><div class="tabela-scroll">
+      <table id="tabela-exemplos">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div></div>
+    <button id="btn-avancar-4" class="botao btn-avancar">Avançar</button>
+  </section>
+
+  <!-- PÁGINA 5: o usuário decide se a notícia é verdadeira ou falsa -->
+  <section id="pagina5" class="pagina">
+    <button id="btn-voltar-5" class="btn-voltar" title="Voltar">←</button>
+    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
+    <h1>Qual é o seu palpite?</h1>
+    <div class="centro-abs bloco-decisao">
+      <span class="rotulo">Notícia enviada:</span>
+      <div id="texto-noticia-5" class="caixa-noticia"></div>
+      <p class="pergunta">Você acha que essa notícia é:</p>
+      <div class="linha-escolha">
+        <button id="btn-verdadeira" class="botao btn-escolha verdadeira">Verdadeira</button>
+        <button id="btn-falsa" class="botao btn-escolha falsa">Falsa</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PÁGINA 6: o modelo concorda com o usuário -->
+  <section id="pagina6" class="pagina">
+    <button id="btn-voltar-6" class="btn-voltar" title="Voltar">←</button>
+    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
+    <div class="centro-abs resultado concorda">
+      <div class="icone">✓</div>
+      <h2>O modelo concorda com você!</h2>
+      <p class="detalhe">Você escolheu: <strong class="escolha-usuario"></strong></p>
+      <p class="detalhe">O modelo classificou como: <strong class="escolha-modelo"></strong></p>
+      <button class="botao btn-nova">Analisar outra notícia</button>
+    </div>
+  </section>
+
+  <!-- PÁGINA 7: o modelo escolheu a outra opção -->
+  <section id="pagina7" class="pagina">
+    <button id="btn-voltar-7" class="btn-voltar" title="Voltar">←</button>
+    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
+    <div class="centro-abs resultado discorda">
+      <div class="icone">✗</div>
+      <h2>O modelo escolheu a outra opção</h2>
+      <p class="detalhe">Você escolheu: <strong class="escolha-usuario"></strong></p>
+      <p class="detalhe">O modelo classificou como: <strong class="escolha-modelo"></strong></p>
+      <button class="botao btn-nova">Analisar outra notícia</button>
+    </div>
+  </section>
+
   <script src="script.js"></script>
 </body>
 </html>
