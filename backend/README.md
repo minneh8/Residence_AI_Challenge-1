@@ -1,29 +1,9 @@
-# DUAT Backend + Frontend
+# DUAT Backend — validação e SVM
 
-A API identifica automaticamente se cada artefato recebe texto bruto ou DataFrame.
+O backend agora rejeita textos que não parecem notícias completas: mínimo de 40 palavras e 250 caracteres.
 
-## Pipelines TF-IDF
+O endpoint `/predict` usa `svm_bundle.joblib`, aplica o scaler e o embedding TF-IDF salvos, retorna `decision_score` e usa `label_mapping` salvo no bundle.
 
-Se o modelo tiver um `TfidfVectorizer`, `TfidfTransformer` ou etapa com nome relacionado a `tfidf`, `vector` ou `text`, o backend chama:
+Gere o bundle atualizado executando o notebook `DUAT_SVM_Diagnostico_Recalibrado.ipynb`. Ele mantém o embedding TF-IDF, verifica o mapeamento dos rótulos, usa `SVC(probability=True)`, mede balanced accuracy e salva `Pipelines/svm_bundle.joblib`.
 
-```python
-model.predict([texto])
-```
-
-Assim, o vocabulário original do treinamento — por exemplo `tfidf_10`, `tfidf_12` e `tfidf_2014` — é usado pelo próprio pipeline. O backend não tenta substituir essas colunas por `num_palavras` ou outras features manuais.
-
-## Execução
-
-```bash
-uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Depois de alterar qualquer `.joblib`, reinicie o processo para o registro recarregar os modelos.
-
-Os endpoints continuam:
-
-- `GET /health`
-- `GET /pipelines`
-- `POST /features`
-- `POST /predict`
-- `POST /anomaly`
+Após substituir o arquivo no backend, reinicie a API.

@@ -24,6 +24,9 @@ class PredictionResponse(BaseModel):
     fake_probability: Optional[float] = None
     true_probability: Optional[float] = None
     confidence: Optional[float] = None
+    decision_score: Optional[float] = None
+    input_valid: bool = True
+    label_mapping: Optional[dict] = None
     features: Dict[str, float]
     explanation: list[str]
     model_loaded: bool
