@@ -30,26 +30,31 @@ class Predictor:
         return isinstance(model, dict) and all(key in model for key in ('model', 'scaler', 'tfidf', 'feature_names'))
 
     def _svm_frame(self, text: str, features: dict[str, float], bundle: dict) -> pd.DataFrame:
-        numeric_names = bundle.get('numeric_features') or [name for name in bundle['feature_names'] if not name.startswith('tfidf_')]
-        tfidf_names = bundle.get('tfidf_features') or [name for name in bundle['feature_names'] if name.startswith('tfidf_')]
+        all_features = bundle['feature_names']
+        numeric_names = bundle.get('numeric_features') or [name for name in all_features if not name.startswith('tfidf_')]
+        numeric_names = [name for name in numeric_names if name not in {'types_proporcao', 'num_palavras'}]
+        tfidf_names = bundle.get('tfidf_features') or [name for name in all_features if name.startswith('tfidf_')]
+        missing = [name for name in numeric_names if name not in features]
+        if missing:
+            raise ValueError(f'O bundle exige features removidas: {", ".join(missing)}. Gere um novo bundle sem types_proporcao e num_palavras.')
         numeric_df = pd.DataFrame(bundle['scaler'].transform([[features[name] for name in numeric_names]]), columns=numeric_names)
         tfidf_df = pd.DataFrame(bundle['tfidf'].transform([text]).toarray(), columns=tfidf_names)
-        return pd.concat([numeric_df, tfidf_df], axis=1)[bundle['feature_names']]
+        frame = pd.concat([numeric_df, tfidf_df], axis=1)
+        expected = [name for name in all_features if name not in {'types_proporcao', 'num_palavras'}]
+        return frame[expected]
 
     def predict(self, text: str, pipeline: str, supplied: Optional[dict[str, float]] = None) -> dict:
         self.validate_news_text(text)
-        canonical = self.registry.canonical(pipeline)
+        if self.registry.canonical(pipeline) != 'svm':
+            raise ValueError('Use o endpoint específico do pipeline selecionado.')
         model = self.registry.get(pipeline)
-        features = self._features(text, supplied)
-        if canonical != 'svm':
-            raise ValueError('Este endpoint de classificação está configurado para o bundle SVM. Use o endpoint específico do pipeline.')
         if not self._is_svm_bundle(model):
             raise ValueError('svm_bundle.joblib não possui o formato esperado.')
-
+        features = self._features(text, supplied)
         frame = self._svm_frame(text, features, model)
         estimator = model['model']
         label = int(estimator.predict(frame)[0])
-        fake, true = None, None
+        fake = true = None
         if hasattr(estimator, 'predict_proba'):
             probabilities = estimator.predict_proba(frame)[0]
             classes = list(estimator.classes_)
@@ -57,14 +62,4 @@ class Predictor:
             true = float(probabilities[classes.index(1)]) if 1 in classes else None
         score = float(estimator.decision_function(frame)[0]) if hasattr(estimator, 'decision_function') else None
         mapping = model.get('label_mapping', {'0': 'fake', '1': 'true'})
-        classification = mapping.get(str(label), 'unknown')
-        return {
-            'pipeline': pipeline, 'label': label, 'classification': classification,
-            'fake_probability': fake, 'true_probability': true,
-            'confidence': max(fake, true) if fake is not None and true is not None else None,
-            'decision_score': score, 'input_valid': True, 'label_mapping': mapping,
-            'features': features,
-            'explanation': ['SVM executado com scaler, embedding TF-IDF e mapeamento salvo no bundle.'],
-            'model_loaded': True,
-            'details': {'feature_count': len(model['feature_names'])},
-        }
+        return {'pipeline': pipeline, 'label': label, 'classification': mapping.get(str(label), 'unknown'), 'fake_probability': fake, 'true_probability': true, 'confidence': max(fake, true) if fake is not None and true is not None else None, 'decision_score': score, 'input_valid': True, 'label_mapping': mapping, 'features': features, 'explanation': ['SVM executado sem types_proporcao e num_palavras.'], 'model_loaded': True, 'details': None}

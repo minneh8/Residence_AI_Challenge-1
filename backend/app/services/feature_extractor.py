@@ -7,9 +7,9 @@ except ImportError:
     spacy = None
 
 FEATURE_NAMES = [
-    'tamanho_medio_palavra', 'num_palavras', 'pct_erro_ortografico',
-    'types_proporcao', 'fontes_proporcao', 'estudos_previos_proporcao',
-    'emotividade', 'sensacionalismo_proporcao', 'verbos_proporcao',
+    'tamanho_medio_palavra', 'pct_erro_ortografico',
+    'fontes_proporcao', 'estudos_previos_proporcao', 'emotividade',
+    'sensacionalismo_proporcao', 'verbos_proporcao',
     'verbos_subj_imp_proporcao', 'substantivos_proporcao',
     'adjetivos_proporcao', 'adverbios_proporcao', 'modais_proporcao',
     'pronomes_proporcao', 'pausalidade', 'indice_legibilidade',
@@ -45,16 +45,13 @@ def extract_features(text: str) -> dict[str, float]:
     total = max(len(words), 1)
     sentences = [part for part in re.split(r'[.!?]+', text) if part.strip()]
     lengths = [len(word) for word in words] or [0]
-    unique = len(set(words))
     punctuation = sum(char in string.punctuation for char in text)
     upper = sum(word.isupper() and len(word) > 2 for word in text.split())
     exclamations = text.count('!')
 
     result = {
         'tamanho_medio_palavra': sum(lengths) / total,
-        'num_palavras': float(len(words)),
         'pct_erro_ortografico': 0.0,
-        'types_proporcao': unique / total,
         'fontes_proporcao': sum(word in SOURCE_WORDS for word in words) / total,
         'estudos_previos_proporcao': sum(word in {'estudo', 'pesquisa', 'artigo', 'análise'} for word in words) / total,
         'emotividade': min((upper + exclamations) / total, 1.0),
