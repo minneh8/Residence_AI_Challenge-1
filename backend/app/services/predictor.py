@@ -21,7 +21,7 @@ class Predictor:
             raise ValueError('As features precisam conter somente valores numéricos.') from error
 
     def _frame(self, features: dict[str, float]) -> pd.DataFrame:
-        return pd.DataFrame([[features[name] for name in FEATURE_NAMES], columns=FEATURE_NAMES)
+        return pd.DataFrame([[features[name] for name in FEATURE_NAMES]], columns=FEATURE_NAMES)
 
     @staticmethod
     def _find(model: Any, names: tuple[str, ...]) -> Any:
