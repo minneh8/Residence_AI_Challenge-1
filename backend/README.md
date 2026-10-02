@@ -1,47 +1,29 @@
 # DUAT Backend + Frontend
 
-O backend reconhece os artefatos reais:
+A API identifica automaticamente se cada artefato recebe texto bruto ou DataFrame.
 
-```text
-backend/app/models/svm.joblib
-backend/app/models/pipeline_kmeans_duat.joblib
-backend/app/models/duat_dbscan_isolation_forest.joblib
+## Pipelines TF-IDF
+
+Se o modelo tiver um `TfidfVectorizer`, `TfidfTransformer` ou etapa com nome relacionado a `tfidf`, `vector` ou `text`, o backend chama:
+
+```python
+model.predict([texto])
 ```
 
-O terceiro artefato é combinado: DBSCAN e Isolation Forest são executados juntos na mesma requisição. O objeto salvo deve expor os componentes como `dbscan` e `isolation_forest` — ou como chaves equivalentes reconhecidas pelo backend.
+Assim, o vocabulário original do treinamento — por exemplo `tfidf_10`, `tfidf_12` e `tfidf_2014` — é usado pelo próprio pipeline. O backend não tenta substituir essas colunas por `num_palavras` ou outras features manuais.
 
-## Executar
+## Execução
 
 ```bash
-python -m venv .venv
-# Windows PowerShell
-.venv\\Scripts\\Activate.ps1
-# Linux/macOS
-source .venv/bin/activate
-pip install -r backend/requirements.txt
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Frontend:
+Depois de alterar qualquer `.joblib`, reinicie o processo para o registro recarregar os modelos.
 
-```bash
-python -m http.server 5500 --directory frontend
-```
+Os endpoints continuam:
 
-Abra `http://localhost:5500`.
-
-## Status
-
-`GET /pipelines` mostra os nomes reais carregados. Aliases aceitos:
-
-- `kmeans` → `pipeline_kmeans_duat`.
-- `dbscan` → `duat_dbscan_isolation_forest`.
-- `isolation_forest` → `duat_dbscan_isolation_forest`.
-
-Para executar os dois modelos juntos:
-
-```json
-{"text":"Texto da notícia", "pipeline":"duat_dbscan_isolation_forest"}
-```
-
-Use `POST /anomaly` ou `POST /predict`. A resposta contém `details.dbscan` e `details.isolation_forest`.
+- `GET /health`
+- `GET /pipelines`
+- `POST /features`
+- `POST /predict`
+- `POST /anomaly`

@@ -37,10 +37,49 @@ class Predictor:
         return dbscan, isolation
 
     @staticmethod
-    def _predict(model: Any, frame: pd.DataFrame) -> Any:
+    def _has_text_pipeline(model: Any) -> bool:
+        if isinstance(model, dict):
+            return any(Predictor._has_text_pipeline(value) for value in model.values())
+        steps = getattr(model, 'named_steps', {})
+        if steps:
+            names = {name.lower() for name in steps}
+            if any('tfidf' in name or 'vector' in name or 'text' in name for name in names):
+                return True
+        vocabulary = getattr(model, 'vocabulary_', None)
+        if vocabulary is not None:
+            return True
+        return False
+
+    @staticmethod
+    def _predict(model: Any, frame: pd.DataFrame, text: str, prefer_text: bool = False) -> Any:
         if not hasattr(model, 'predict'):
             raise ValueError('O artefato não possui o método predict.')
-        return model.predict(frame)[0]
+        if prefer_text:
+            return model.predict([text])[0]
+        try:
+            return model.predict(frame)[0]
+        except ValueError as error:
+            message = str(error).lower()
+            if 'feature names' in message or 'tfidf_' in message or 'unseen at fit time' in message:
+                return model.predict([text])[0]
+            raise
+
+    @staticmethod
+    def _predict_proba(model: Any, frame: pd.DataFrame, text: str, prefer_text: bool = False):
+        if not hasattr(model, 'predict_proba'):
+            return None, None
+        try:
+            probabilities = model.predict_proba([text] if prefer_text else frame)[0]
+        except ValueError as error:
+            message = str(error).lower()
+            if 'feature names' in message or 'tfidf_' in message or 'unseen at fit time' in message:
+                probabilities = model.predict_proba([text])[0]
+            else:
+                raise
+        classes = list(model.classes_)
+        fake = float(probabilities[classes.index(0)]) if 0 in classes else None
+        true = float(probabilities[classes.index(1)]) if 1 in classes else None
+        return fake, true
 
     def _fallback(self, features: dict[str, float]) -> tuple[int, float]:
         score = 0.5
@@ -63,18 +102,12 @@ class Predictor:
             loaded = False
         else:
             frame = self._frame(features)
-            label = int(self._predict(model, frame))
-            if hasattr(model, 'predict_proba'):
-                probabilities = model.predict_proba(frame)[0]
-                classes = list(model.classes_)
-                fake_probability = float(probabilities[classes.index(0)])
-                true_probability = float(probabilities[classes.index(1)])
-            else:
-                fake_probability = None
-                true_probability = None
+            text_pipeline = self._has_text_pipeline(model)
+            label = int(self._predict(model, frame, text, text_pipeline))
+            fake_probability, true_probability = self._predict_proba(model, frame, text, text_pipeline)
             loaded = True
 
-        confidence = None if fake_probability is None else max(fake_probability, true_probability)
+        confidence = None if fake_probability is None or true_probability is None else max(fake_probability, true_probability)
         return {
             'pipeline': pipeline,
             'label': label,
@@ -104,9 +137,15 @@ class Predictor:
         if dbscan is None or isolation is None:
             raise ValueError('O artefato precisa expor DBSCAN e Isolation Forest.')
 
-        dbscan_label = int(self._predict(dbscan, frame))
-        isolation_label = int(self._predict(isolation, frame))
-        isolation_score = float(isolation.decision_function(frame)[0]) if hasattr(isolation, 'decision_function') else None
+        dbscan_label = int(self._predict(dbscan, frame, text, self._has_text_pipeline(dbscan)))
+        isolation_label = int(self._predict(isolation, frame, text, self._has_text_pipeline(isolation)))
+        isolation_score = None
+        if hasattr(isolation, 'decision_function'):
+            try:
+                isolation_score = float(isolation.decision_function([text] if self._has_text_pipeline(isolation) else frame)[0])
+            except ValueError:
+                isolation_score = float(isolation.decision_function([text])[0])
+
         details = {
             'dbscan': {'cluster': dbscan_label, 'anomaly': dbscan_label == -1},
             'isolation_forest': {'prediction': isolation_label, 'anomaly': isolation_label == -1, 'score': isolation_score},
