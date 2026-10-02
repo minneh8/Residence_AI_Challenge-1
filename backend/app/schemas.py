@@ -2,7 +2,10 @@ from typing import Dict, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-PipelineName = Literal['svm', 'kmeans', 'dbscan', 'isolation_forest']
+PipelineName = Literal[
+    'svm', 'kmeans', 'dbscan', 'isolation_forest',
+    'pipeline_kmeans_duat', 'duat_dbscan_isolation_forest',
+]
 
 
 class FeatureRequest(BaseModel):
@@ -24,10 +27,11 @@ class PredictionResponse(BaseModel):
     features: Dict[str, float]
     explanation: list[str]
     model_loaded: bool
+    details: Optional[dict] = None
 
 
 class AnomalyRequest(FeatureRequest):
-    pipeline: Literal['dbscan', 'isolation_forest'] = 'isolation_forest'
+    pipeline: Literal['dbscan', 'isolation_forest', 'duat_dbscan_isolation_forest'] = 'duat_dbscan_isolation_forest'
     features: Optional[Dict[str, float]] = None
 
 
@@ -38,3 +42,4 @@ class AnomalyResponse(BaseModel):
     cluster: Optional[int] = None
     features: Dict[str, float]
     model_loaded: bool
+    details: Optional[dict] = None

@@ -1,40 +1,28 @@
 # DUAT Backend + Frontend
 
-A API está integrada ao frontend visual existente sem alteração de design. O HTML, CSS e a imagem da identidade visual são preservados; apenas o JavaScript realiza as chamadas à API.
+O backend reconhece os artefatos reais:
 
-## Rodar localmente
+```text
+backend/app/models/svm.joblib
+backend/app/models/pipeline_kmeans_duat.joblib
+backend/app/models/duat_dbscan_isolation_forest.joblib
+```
 
-Na raiz do repositório:
+O terceiro artefato é combinado: DBSCAN e Isolation Forest são executados juntos na mesma requisição. O objeto salvo deve expor os componentes como `dbscan` e `isolation_forest` — ou como chaves equivalentes reconhecidas pelo backend.
+
+## Executar
 
 ```bash
 python -m venv .venv
-```
-
-Windows PowerShell:
-
-```powershell
+# Windows PowerShell
 .venv\\Scripts\\Activate.ps1
-```
-
-Linux/macOS:
-
-```bash
+# Linux/macOS
 source .venv/bin/activate
-```
-
-Instale as dependências:
-
-```bash
 pip install -r backend/requirements.txt
-```
-
-Terminal 1 — backend:
-
-```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Terminal 2 — frontend:
+Frontend:
 
 ```bash
 python -m http.server 5500 --directory frontend
@@ -42,31 +30,18 @@ python -m http.server 5500 --directory frontend
 
 Abra `http://localhost:5500`.
 
-## Pipelines
+## Status
 
-Coloque os artefatos treinados em `backend/app/models/`:
+`GET /pipelines` mostra os nomes reais carregados. Aliases aceitos:
 
-```text
-svm.joblib
-kmeans.joblib
-dbscan.joblib
-isolation_forest.joblib
-```
+- `kmeans` → `pipeline_kmeans_duat`.
+- `dbscan` → `duat_dbscan_isolation_forest`.
+- `isolation_forest` → `duat_dbscan_isolation_forest`.
 
-Reinicie a API e verifique `http://localhost:8000/pipelines`.
-
-## Contratos
-
-SVM e K-Means usam `POST /predict`:
+Para executar os dois modelos juntos:
 
 ```json
-{"text":"Texto da notícia", "pipeline":"svm"}
+{"text":"Texto da notícia", "pipeline":"duat_dbscan_isolation_forest"}
 ```
 
-DBSCAN e Isolation Forest usam `POST /anomaly`:
-
-```json
-{"text":"Texto da notícia", "pipeline":"isolation_forest"}
-```
-
-O frontend mantém o design original e consome esses endpoints pelo JavaScript.
+Use `POST /anomaly` ou `POST /predict`. A resposta contém `details.dbscan` e `details.isolation_forest`.

@@ -7,15 +7,9 @@ from .schemas import AnomalyRequest, AnomalyResponse, FeatureRequest, Prediction
 from .services.feature_extractor import extract_features
 from .services.predictor import Predictor
 
-app = FastAPI(title='DUAT API', version='1.2.0')
+app = FastAPI(title='DUAT API', version='1.3.0')
 origins = [origin.strip() for origin in os.getenv('DUAT_CORS_ORIGINS', '*').split(',') if origin.strip()]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False,
-    allow_methods=['*'],
-    allow_headers=['*'],
-)
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False, allow_methods=['*'], allow_headers=['*'])
 
 predictor = Predictor()
 
@@ -29,7 +23,8 @@ def health():
 def pipelines():
     return {
         'available': predictor.registry.available(),
-        'supported': ['svm', 'kmeans', 'dbscan', 'isolation_forest'],
+        'supported': predictor.registry.supported(),
+        'aliases': {'kmeans': 'pipeline_kmeans_duat', 'dbscan': 'duat_dbscan_isolation_forest', 'isolation_forest': 'duat_dbscan_isolation_forest'},
         'status': predictor.registry.status(),
     }
 
@@ -46,7 +41,7 @@ def predict(request: PredictionRequest):
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=500, detail='Erro interno ao classificar a notícia.') from error
+        raise HTTPException(status_code=500, detail='Erro interno ao executar o pipeline.') from error
 
 
 @app.post('/anomaly', response_model=AnomalyResponse)
@@ -56,4 +51,4 @@ def anomaly(request: AnomalyRequest):
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=500, detail='Erro interno ao analisar anomalia.') from error
+        raise HTTPException(status_code=500, detail='Erro interno ao executar a análise de anomalias.') from error
