@@ -5,7 +5,7 @@ import joblib
 
 MODEL_DIR = Path(__file__).resolve().parents[1] / 'models'
 ARTIFACTS = {
-    'svm': 'svm.joblib',
+    'svm': 'svm_bundle.joblib',
     'pipeline_kmeans_duat': 'pipeline_kmeans_duat.joblib',
     'duat_dbscan_isolation_forest': 'duat_dbscan_isolation_forest.joblib',
 }
