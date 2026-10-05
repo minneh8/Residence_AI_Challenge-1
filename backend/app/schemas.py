@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 Evaluation = Literal["v", "f", "n"]
 
@@ -42,3 +42,7 @@ class AnalysisResponse(BaseModel):
     comparison: dict
     class_comparison: list[dict]
     warnings: list[str]
+
+class PredictRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    user_evaluation: Evaluation = "n"
