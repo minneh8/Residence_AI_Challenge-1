@@ -11,6 +11,7 @@ def _load_external_extractor() -> Any:
     candidates = [
         Path("extracao_features.py"),
         Path("backend/extracao_features.py"),
+        Path(__file__).resolve().parents[2] / "extracao_features.py",
         Path(__file__).resolve().parents[3] / "extracao_features.py",
     ]
     for path in candidates:

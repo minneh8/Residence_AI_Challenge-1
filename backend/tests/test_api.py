@@ -19,3 +19,8 @@ def test_validation_requires_text():
 def test_invalid_evaluation():
     response = client.post("/api/v1/analyze", json={"text": "noticia", "user_evaluation": "x"})
     assert response.status_code == 422
+
+
+def test_legacy_features_validation():
+    response = client.post("/features", json={"user_evaluation": "n"})
+    assert response.status_code == 422
