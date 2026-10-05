@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from ..core.constants import FEATURES
 from .feature_extractor import _load_external_extractor
 
 
@@ -36,17 +37,36 @@ class ReferenceService:
             return self._reference
         if not self.dataset_path.exists():
             raise FileNotFoundError(f"Dataset DUAT não encontrado. Procurado em: {self.dataset_path}")
+
         data = pd.read_csv(self.dataset_path)
         data.columns = data.columns.str.strip()
-        feature_cols = [c for c in data.columns if c not in {"texto", "rotulo"}]
-        normalized = bool(feature_cols) and data[feature_cols].max().max() <= 1.0001
+        missing = [column for column in FEATURES if column not in data.columns]
+        if missing and "texto" not in data.columns:
+            raise ValueError(f"Dataset sem a coluna texto e sem features obrigatórias: {missing}")
+
+        # O dataset também possui colunas textuais como texto, titulo ou categoria.
+        # Nunca tente calcular max() nessas colunas: considere somente as 16 features.
+        feature_frame = data[[column for column in FEATURES if column in data.columns]].apply(
+            pd.to_numeric, errors="coerce"
+        )
+        numeric_feature_count = int(feature_frame.notna().any(axis=0).sum())
+        normalized = numeric_feature_count == len(FEATURES) and bool(
+            (feature_frame.max(axis=0, skipna=True) <= 1.0001).all()
+        )
+
         if normalized:
             if "texto" not in data.columns:
                 raise ValueError("Dataset normalizado sem coluna texto; não é possível recuperar a escala bruta.")
             module = _load_external_extractor()
             if module is None or not hasattr(module, "montar_dataset"):
                 raise FileNotFoundError("Extrator DUAT necessário para recriar a referência bruta.")
-            data = module.montar_dataset(data[["texto"] + (["rotulo"] if "rotulo" in data else [])], verbose=True)
+            data = module.montar_dataset(
+                data[["texto"] + (["rotulo"] if "rotulo" in data.columns else [])],
+                verbose=True,
+            )
             data.to_csv(self.cache_path, index=False)
+        elif missing:
+            raise ValueError(f"Dataset sem as 16 features do DUAT. Colunas ausentes: {missing}")
+
         self._reference = data
         return data
