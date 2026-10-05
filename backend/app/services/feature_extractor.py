@@ -4,7 +4,10 @@ import importlib.util
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
+
+from ..core.constants import FEATURES
 
 
 def _load_external_extractor() -> Any:
@@ -27,9 +30,7 @@ def _load_external_extractor() -> Any:
 def extract_raw(text: str) -> pd.DataFrame:
     module = _load_external_extractor()
     if module is None or not hasattr(module, "montar_dataset"):
-        raise FileNotFoundError(
-            "extracao_features.py não encontrado. Instale o artefato de extração do DUAT."
-        )
+        raise FileNotFoundError("extracao_features.py não encontrado. Instale o artefato de extração do DUAT.")
     return module.montar_dataset(pd.DataFrame({"texto": [text]}), verbose=False)
 
 
@@ -37,6 +38,11 @@ def normalize_with_reference(raw: pd.DataFrame, reference: pd.DataFrame):
     module = _load_external_extractor()
     if module is None or not hasattr(module, "padronizar_dataframe"):
         raise FileNotFoundError("padronizar_dataframe não está disponível no extrator DUAT.")
+
     combined = pd.concat([reference, raw], ignore_index=True)
     normalized = module.padronizar_dataframe(combined, verbose=False)
-    return normalized.iloc[[-1]].reset_index(drop=True), normalized.iloc[:-1].reset_index(drop=True)
+    normalized[FEATURES] = normalized[FEATURES].astype(np.float64)
+
+    news = normalized.iloc[[-1]].reset_index(drop=True)
+    normalized_reference = normalized.iloc[:-1].reset_index(drop=True)
+    return news, normalized_reference
