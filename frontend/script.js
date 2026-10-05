@@ -1,5 +1,5 @@
 const API_BASE_URL = 'http://localhost:8000';
-const state = { text: '', features: {}, result: null, userChoice: null };
+const state = { text: '', features: [], result: null, userChoice: null };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
@@ -10,7 +10,7 @@ function showPage(id) {
 
 function clearAnalysis() {
   state.text = '';
-  state.features = {};
+  state.features = [];
   state.result = null;
   state.userChoice = null;
   const input = $('#entrada');
@@ -19,16 +19,30 @@ function clearAnalysis() {
   $$('.corpo-tabela').forEach((tbody) => { tbody.innerHTML = ''; });
 }
 
+function normalizeFeatures(features) {
+  if (Array.isArray(features)) return features;
+  if (features && typeof features === 'object') {
+    return Object.entries(features).map(([name, value]) => ({
+      name,
+      label: name,
+      value: typeof value === 'number' ? value : Number(value),
+      scaled_value: typeof value === 'number' ? value : Number(value),
+    }));
+  }
+  return [];
+}
+
 function fillTables(features) {
+  const normalized = normalizeFeatures(features);
   $$('.corpo-tabela').forEach((tbody) => {
     tbody.innerHTML = '';
-    Object.entries(features).forEach(([name, value]) => {
-      if (name === 'types_proporcao' || name === 'num_palavras') return;
+    normalized.forEach((feature) => {
       const row = document.createElement('tr');
       const nameCell = document.createElement('td');
       const valueCell = document.createElement('td');
-      nameCell.textContent = name;
-      valueCell.textContent = typeof value === 'number' ? value.toFixed(6) : String(value);
+      nameCell.textContent = feature.label ?? feature.name ?? 'Feature';
+      const numericValue = feature.value ?? feature.scaled_value ?? feature.raw_value;
+      valueCell.textContent = Number.isFinite(Number(numericValue)) ? Number(numericValue).toFixed(6) : '—';
       row.append(nameCell, valueCell);
       tbody.appendChild(row);
     });
@@ -36,7 +50,10 @@ function fillTables(features) {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, { headers: {'Content-Type': 'application/json'}, ...options });
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.detail || `HTTP ${response.status}`);
   return body;
@@ -51,8 +68,8 @@ async function analyze() {
   button.disabled = true;
   button.textContent = 'Analisando...';
   try {
-    const data = await request('/features', {method:'POST', body: JSON.stringify({text})});
-    state.features = data.features || {};
+    const data = await request('/features', { method: 'POST', body: JSON.stringify({ text, user_evaluation: 'n' }) });
+    state.features = normalizeFeatures(data.features);
     fillTables(state.features);
     $('#texto-noticia').textContent = text;
     $('#texto-noticia-5').textContent = text;
@@ -67,7 +84,10 @@ async function analyze() {
 
 async function executeModel() {
   try {
-    const data = await request('/predict', {method:'POST', body: JSON.stringify({text: state.text, pipeline: 'svm', features: state.features})});
+    const data = await request('/api/v1/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ text: state.text, user_evaluation: 'n' }),
+    });
     state.result = data;
     showPage('pagina2');
   } catch (error) {
@@ -75,11 +95,26 @@ async function executeModel() {
   }
 }
 
-function userChoice(choice) {
-  const model = state.result?.classification === 'fake' ? 'Falsa' : 'Verdadeira';
-  $$('.escolha-usuario').forEach((el) => { el.textContent = choice; });
-  $$('.escolha-modelo').forEach((el) => { el.textContent = model; });
-  showPage(choice === model ? 'pagina6' : 'pagina7');
+async function userChoice(choice) {
+  const button = choice === 'Verdadeira' ? $('#btn-verdadeira') : $('#btn-falsa');
+  if (button) button.disabled = true;
+  try {
+    const userEvaluation = choice === 'Verdadeira' ? 'v' : 'f';
+    const data = await request('/predict', {
+      method: 'POST',
+      body: JSON.stringify({ text: state.text, user_evaluation: userEvaluation }),
+    });
+    state.userChoice = choice;
+    state.result = data;
+    const model = data.prediction === 'falsa' || data.prediction === 'fake' || data.label === 0 ? 'Falsa' : 'Verdadeira';
+    $$('.escolha-usuario').forEach((el) => { el.textContent = choice; });
+    $$('.escolha-modelo').forEach((el) => { el.textContent = model; });
+    showPage(choice === model ? 'pagina6' : 'pagina7');
+  } catch (error) {
+    alert(`Não foi possível executar a avaliação: ${error.message}`);
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 $('#btn-enviar')?.addEventListener('click', analyze);
