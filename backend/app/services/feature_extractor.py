@@ -9,13 +9,16 @@ import pandas as pd
 
 from ..core.constants import FEATURES
 
+ROOT = Path(__file__).resolve().parents[3]
+
 
 def _load_external_extractor() -> Any:
     candidates = [
-        Path("extracao_features.py"),
-        Path("backend/extracao_features.py"),
+        ROOT / "backend" / "extracao_features.py",
+        ROOT / "extracao_features.py",
+        Path.cwd() / "backend" / "extracao_features.py",
+        Path.cwd() / "extracao_features.py",
         Path(__file__).resolve().parents[2] / "extracao_features.py",
-        Path(__file__).resolve().parents[3] / "extracao_features.py",
     ]
     for path in candidates:
         if path.exists():
@@ -27,22 +30,27 @@ def _load_external_extractor() -> Any:
     return None
 
 
+def extractor_locations() -> list[str]:
+    return [
+        str(ROOT / "backend" / "extracao_features.py"),
+        str(ROOT / "extracao_features.py"),
+        str(Path.cwd() / "backend" / "extracao_features.py"),
+        str(Path.cwd() / "extracao_features.py"),
+    ]
+
+
 def extract_raw(text: str) -> pd.DataFrame:
     module = _load_external_extractor()
     if module is None or not hasattr(module, "montar_dataset"):
-        raise FileNotFoundError("extracao_features.py não encontrado. Instale o artefato de extração do DUAT.")
+        raise FileNotFoundError("extracao_features.py não encontrado. Locais verificados: " + ", ".join(extractor_locations()))
     return module.montar_dataset(pd.DataFrame({"texto": [text]}), verbose=False)
 
 
 def normalize_with_reference(raw: pd.DataFrame, reference: pd.DataFrame):
     module = _load_external_extractor()
     if module is None or not hasattr(module, "padronizar_dataframe"):
-        raise FileNotFoundError("padronizar_dataframe não está disponível no extrator DUAT.")
-
+        raise FileNotFoundError("padronizar_dataframe não disponível em extracao_features.py. Locais verificados: " + ", ".join(extractor_locations()))
     combined = pd.concat([reference, raw], ignore_index=True)
     normalized = module.padronizar_dataframe(combined, verbose=False)
     normalized[FEATURES] = normalized[FEATURES].astype(np.float64)
-
-    news = normalized.iloc[[-1]].reset_index(drop=True)
-    normalized_reference = normalized.iloc[:-1].reset_index(drop=True)
-    return news, normalized_reference
+    return normalized.iloc[[-1]].reset_index(drop=True), normalized.iloc[:-1].reset_index(drop=True)

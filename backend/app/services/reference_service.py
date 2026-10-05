@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from ..core.constants import FEATURES
-from .feature_extractor import _load_external_extractor
+from .feature_extractor import _load_external_extractor, extractor_locations
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_REFERENCE_DIR = ROOT / "backend" / "reference"
@@ -60,7 +60,7 @@ class ReferenceService:
                 raise ValueError("Dataset normalizado sem coluna texto; não é possível criar a referência bruta.")
             module = _load_external_extractor()
             if module is None or not hasattr(module, "montar_dataset"):
-                raise FileNotFoundError("Extrator DUAT necessário para criar a referência bruta.")
+                raise FileNotFoundError("Extrator DUAT necessário para criar a referência bruta. Coloque extracao_features.py em backend/. Locais verificados: " + ", ".join(extractor_locations()))
             data = module.montar_dataset(data[["texto"] + (["rotulo"] if "rotulo" in data.columns else [])], verbose=False)
         elif missing:
             raise ValueError(f"Dataset sem as 16 features do DUAT. Colunas ausentes: {missing}")
