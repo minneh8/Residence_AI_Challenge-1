@@ -12,29 +12,36 @@ python -m spacy download pt_core_news_sm
 uvicorn backend.app.main:app --reload
 ```
 
-## Variáveis opcionais
+## Cache da referência
+
+Na primeira execução, se `backend/reference/referencia_bruta.csv` não existir, o backend lê o dataset configurado e cria o cache bruto. Nas execuções seguintes, o cache é carregado do disco uma vez e depois mantido em memória; o dataset pesado não é processado novamente para cada notícia.
+
+Para forçar a recriação:
 
 ```bash
-export DUAT_DATASET_PATH=dataset_duat_final.csv
-export DUAT_REFERENCE_CACHE=referencia_bruta.csv
+rm backend/reference/referencia_bruta.csv
 ```
 
-O arquivo `extracao_features.py` precisa estar na raiz ou em `backend/`. Os modelos esperados ficam em `backend/app/models/`.
+No PowerShell:
+
+```powershell
+Remove-Item backend/reference/referencia_bruta.csv
+```
+
+Variáveis opcionais:
+
+```bash
+DUAT_DATASET_PATH=dataset_duat_final.csv
+DUAT_REFERENCE_CACHE=backend/reference/referencia_bruta.csv
+```
+
+O cache não deve ser recriado automaticamente depois de existir. Se o dataset mudar, remova o cache manualmente.
 
 ## Endpoints
 
 - `GET /health`
 - `POST /api/v1/analyze`
-
-Exemplo:
-
-```json
-{
-  "text": "Texto completo da notícia...",
-  "user_evaluation": "n"
-}
-```
-
-As opções de avaliação são `v`, `f` e `n`. A resposta contém features brutas/escaladas, perfil K-Means, percentis dos seis critérios prioritários, comparação por classe, predição SVM e segurança relativa.
+- `POST /features`
+- `POST /predict`
 
 O DUAT é contexto para decisão e não um verificador de fatos.
