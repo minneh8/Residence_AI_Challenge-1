@@ -60,19 +60,19 @@ class AnalysisService:
             criteria = build_priority_results(profile, row, profile_reference)
             out_of_range = [feature for feature in FEATURES if raw[feature].iloc[0] < reference_raw[feature].min() or raw[feature].iloc[0] > reference_raw[feature].max()]
             texts = reference_raw["texto"] if "texto" in reference_raw.columns else None
-            svm_label, distance, confidence = predict(self.svm, row, text, reference, texts)
+            svm_result = predict(self.svm, row, text, reference, texts)
             classes = class_comparison(profile, row, profile_reference, profile_labels)
             user_label = {"v": 1, "f": 0, "n": None}[user_evaluation]
-            agreement = None if user_label is None else user_label == svm_label
+            agreement = None if user_label is None else user_label == svm_result["label"]
             return {
                 "word_count": len(text.split()),
                 "short_text_warning": len(text.split()) < 50,
                 "profile": {"key": profile, "name": PROFILE_NAMES[profile]},
-                "features": [{"name": f, "label": NAMES[f], "raw_value": float(raw[f].iloc[0]), "scaled_value": float(row[f].iloc[0])} for f in FEATURES],
+                "features": [{"name": f, "label": NAMES[f], "raw_value": float(raw[f].iloc[0]), "scaled_value": float(row[f].iloc[0]), "value": float(row[f].iloc[0])} for f in FEATURES],
                 "priority_criteria": criteria,
                 "out_of_range_features": out_of_range,
-                "svm": {"prediction": LABEL_NAMES[svm_label], "label": svm_label, "decision_distance": distance, "confidence_level": confidence},
-                "comparison": {"user_evaluation": "não sei" if user_label is None else LABEL_NAMES[user_label], "model_evaluation": LABEL_NAMES[svm_label], "agreement": agreement, "message": "O DUAT não é um verificador de fatos; revise fontes confiáveis antes de decidir ou compartilhar."},
+                "svm": {"prediction": LABEL_NAMES[svm_result["label"]], "label": svm_result["label"], "decision_distance": svm_result["distance"], "confidence_level": svm_result["confidence"], "matrix_shape": svm_result["matrix_shape"]},
+                "comparison": {"user_evaluation": "não sei" if user_label is None else LABEL_NAMES[user_label], "model_evaluation": LABEL_NAMES[svm_result["label"]], "agreement": agreement, "message": "O DUAT não é um verificador de fatos; revise fontes confiáveis antes de decidir ou compartilhar."},
                 "class_comparison": classes,
                 "warnings": ["O resultado é contexto para a decisão, não um veredito.", "O DUAT analisa estilo textual e não verifica os fatos do conteúdo."],
             }

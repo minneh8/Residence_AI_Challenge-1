@@ -29,12 +29,13 @@ def build_matrix(bundle, numeric_frame: pd.DataFrame, text: list[str]):
 
 def predict(bundle, row, text: str, reference=None, reference_texts=None):
     matrix = build_matrix(bundle, row, [text])
-    label = int(bundle["model"].predict(matrix)[0])
-    distance = float(np.asarray(bundle["model"].decision_function(matrix)).reshape(-1)[0])
+    model = bundle["model"]
+    decision = float(np.asarray(model.decision_function(matrix)).reshape(-1)[0])
+    label = int(np.asarray(model.predict(matrix)).reshape(-1)[0])
     confidence = None
     if reference is not None and reference_texts is not None:
         reference_matrix = build_matrix(bundle, reference, list(reference_texts))
-        reference_distances = np.abs(np.asarray(bundle["model"].decision_function(reference_matrix)).reshape(-1))
+        reference_distances = np.abs(np.asarray(model.decision_function(reference_matrix)).reshape(-1))
         first, second = np.percentile(reference_distances, [33.3, 66.7])
-        confidence = "baixa" if abs(distance) < first else ("moderada" if abs(distance) < second else "alta")
-    return label, distance, confidence
+        confidence = "baixa" if abs(decision) < first else ("moderada" if abs(decision) < second else "alta")
+    return {"label": label, "distance": decision, "confidence": confidence, "matrix_shape": list(matrix.shape)}
