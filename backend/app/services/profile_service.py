@@ -3,11 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from ..core.constants import FEATURES, NAMES, PRIORITY_CRITERIA, PROFILE_NAMES
+from ..core.constants import FEATURES, NAMES, PRIORITY_CRITERIA
 
 
 def percentile(values, value: float) -> float:
-    values = np.asarray(values, dtype=float)
+    values = np.asarray(values, dtype=np.float64)
     return float(100 * (np.mean(values < value) + 0.5 * np.mean(values == value)))
 
 
@@ -19,13 +19,26 @@ def status(percentile_value: float) -> str:
     return "dentro do comum"
 
 
+def _as_float64(frame: pd.DataFrame) -> np.ndarray:
+    return np.ascontiguousarray(frame[FEATURES].astype(np.float64).to_numpy(), dtype=np.float64)
+
+
+def _prepare_kmeans_dtype(kmeans) -> None:
+    estimator = kmeans.named_steps["kmeans"]
+    if hasattr(estimator, "cluster_centers_"):
+        estimator.cluster_centers_ = np.ascontiguousarray(estimator.cluster_centers_, dtype=np.float64)
+    if hasattr(estimator, "_n_threads"):
+        estimator._n_threads = 1
+
+
 def detect_profile(kmeans, scaled_row: pd.DataFrame, scaled_reference: pd.DataFrame):
-    centers = kmeans.named_steps["kmeans"].cluster_centers_
+    _prepare_kmeans_dtype(kmeans)
+    centers = np.asarray(kmeans.named_steps["kmeans"].cluster_centers_, dtype=np.float64)
     verbal_index = FEATURES.index("verbos_proporcao")
     verbal_cluster = int(np.argmax(centers[:, verbal_index]))
     mapping = {verbal_cluster: "verbal", 1 - verbal_cluster: "nominal"}
-    cluster = int(kmeans.predict(scaled_row[FEATURES])[0])
-    ref_clusters = kmeans.predict(scaled_reference[FEATURES])
+    cluster = int(kmeans.predict(_as_float64(scaled_row))[0])
+    ref_clusters = kmeans.predict(_as_float64(scaled_reference))
     return mapping[cluster], mapping, ref_clusters
 
 
