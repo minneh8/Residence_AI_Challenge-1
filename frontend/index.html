@@ -8,9 +8,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ORDEM DAS TELAS: pagina1 → pagina3 → pagina4 → pagina2 → pagina5 → pagina6 (modelo concorda) ou pagina7 (modelo discorda) -->
-
-  <!-- PÁGINA 1: entrada da notícia -->
   <section id="pagina1" class="pagina ativa centro">
     <img src="DUAT.png" alt="DUAT" class="logo-grande">
     <div class="linha-envio">
@@ -19,116 +16,51 @@
     </div>
   </section>
 
-  <!-- PÁGINA 3: tabela de features + botão Avançar -->
   <section id="pagina3" class="pagina">
     <button id="btn-voltar" class="btn-voltar" title="Voltar">←</button>
     <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
     <h1>Explicação das Features</h1>
     <div class="tabela-box centro-abs"><div class="tabela-scroll">
       <table>
-        <thead>
-          <tr>
-            <th>Features</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody class="corpo-tabela">
-          
-        </tbody>
+        <thead><tr><th>Features</th><th>Valor</th></tr></thead>
+        <tbody class="corpo-tabela"></tbody>
       </table>
     </div></div>
     <button id="btn-avancar" class="botao btn-avancar">Avançar</button>
   </section>
 
-  <!-- PÁGINA 2: notícia enviada + tabela de features -->
   <section id="pagina2" class="pagina">
     <button id="btn-voltar-2" class="btn-voltar" title="Voltar">←</button>
     <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
     <h1>Análise da notícia</h1>
-    <div class="noticia">
-      <span class="rotulo">Notícia enviada:</span>
-      <div id="texto-noticia" class="caixa-noticia"></div>
-    </div>
-
+    <div class="noticia"><span class="rotulo">Notícia enviada:</span><div id="texto-noticia" class="caixa-noticia"></div></div>
     <div id="vista-tabela" class="tabela-box"><div class="tabela-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Features</th>
-            <th>Valor</th>
-            </tr>
-        </thead>
-        <tbody class="corpo-tabela">
-
-        </tbody>
-      </table>
+      <table><thead><tr><th>Features</th><th>Valor</th></tr></thead><tbody class="corpo-tabela"></tbody></table>
     </div></div>
-    <!-- Vista de gráficos: dois espaços iguais e centralizados -->
-    <div id="vista-graficos" class="graficos">
-      <div id="grafico-1" class="grafico-box">Gráfico 1</div>
-      <div id="grafico-2" class="grafico-box">Gráfico 2</div>
-    </div>
+    <div id="vista-graficos" class="graficos"><div id="grafico-1" class="grafico-box">Gráfico 1</div><div id="grafico-2" class="grafico-box">Gráfico 2</div></div>
     <button id="btn-ver-tabela" class="botao btn-aba ativo">Tabela</button>
     <button id="btn-ver-graficos" class="botao btn-aba">Gráficos</button>
     <button id="btn-avancar-2" class="botao btn-avancar">Avançar</button>
   </section>
 
-  <!-- PÁGINA 4: exemplos de notícias (10 notícias: 5 verdadeiras e 5 falsas) -->
   <section id="pagina4" class="pagina">
     <button id="btn-voltar-4" class="btn-voltar" title="Voltar">←</button>
     <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
     <h1>Exemplo de Notícias</h1>
-    <div class="tabela-box tabela-exemplos centro-abs"><div class="tabela-scroll">
-      <table id="tabela-exemplos">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
-    </div></div>
+    <div class="tabela-box tabela-exemplos centro-abs"><div class="tabela-scroll"><table id="tabela-exemplos"><thead></thead><tbody></tbody></table></div></div>
     <button id="btn-avancar-4" class="botao btn-avancar">Avançar</button>
   </section>
 
-  <!-- PÁGINA 5: o usuário decide se a notícia é verdadeira ou falsa -->
   <section id="pagina5" class="pagina">
     <button id="btn-voltar-5" class="btn-voltar" title="Voltar">←</button>
     <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
     <h1>Qual é o seu palpite?</h1>
-    <div class="centro-abs bloco-decisao">
-      <span class="rotulo">Notícia enviada:</span>
-      <div id="texto-noticia-5" class="caixa-noticia"></div>
-      <p class="pergunta">Você acha que essa notícia é:</p>
-      <div class="linha-escolha">
-        <button id="btn-verdadeira" class="botao btn-escolha verdadeira">Verdadeira</button>
-        <button id="btn-falsa" class="botao btn-escolha falsa">Falsa</button>
-      </div>
-    </div>
+    <div class="centro-abs bloco-decisao"><span class="rotulo">Notícia enviada:</span><div id="texto-noticia-5" class="caixa-noticia"></div><p class="pergunta">Você acha que essa notícia é:</p><div class="linha-escolha"><button id="btn-verdadeira" class="botao btn-escolha verdadeira">Verdadeira</button><button id="btn-falsa" class="botao btn-escolha falsa">Falsa</button></div></div>
   </section>
 
-  <!-- PÁGINA 6: o modelo concorda com o usuário -->
-  <section id="pagina6" class="pagina">
-    <button id="btn-voltar-6" class="btn-voltar" title="Voltar">←</button>
-    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
-    <div class="centro-abs resultado concorda">
-      <div class="icone">✓</div>
-      <h2>O modelo concorda com você!</h2>
-      <p class="detalhe">Você escolheu: <strong class="escolha-usuario"></strong></p>
-      <p class="detalhe">O modelo classificou como: <strong class="escolha-modelo"></strong></p>
-      <button class="botao btn-nova">Analisar outra notícia</button>
-    </div>
-  </section>
+  <section id="pagina6" class="pagina"><button id="btn-voltar-6" class="btn-voltar" title="Voltar">←</button><img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início"><div class="centro-abs resultado concorda"><div class="icone">✓</div><h2>O modelo concorda com você!</h2><p class="detalhe">Você escolheu: <strong class="escolha-usuario"></strong></p><p class="detalhe">O modelo classificou como: <strong class="escolha-modelo"></strong></p><button class="botao btn-nova">Analisar outra notícia</button></div></section>
+  <section id="pagina7" class="pagina"><button id="btn-voltar-7" class="btn-voltar" title="Voltar">←</button><img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início"><div class="centro-abs resultado discorda"><div class="icone">✗</div><h2>O modelo escolheu a outra opção</h2><p class="detalhe">Você escolheu: <strong class="escolha-usuario"></strong></p><p class="detalhe">O modelo classificou como: <strong class="escolha-modelo"></strong></p><button class="botao btn-nova">Analisar outra notícia</button></div></section>
 
-  <!-- PÁGINA 7: o modelo escolheu a outra opção -->
-  <section id="pagina7" class="pagina">
-    <button id="btn-voltar-7" class="btn-voltar" title="Voltar">←</button>
-    <img src="DUAT.png" alt="DUAT" class="logo-voltar" title="Voltar ao início">
-    <div class="centro-abs resultado discorda">
-      <div class="icone">✗</div>
-      <h2>O modelo escolheu a outra opção</h2>
-      <p class="detalhe">Você escolheu: <strong class="escolha-usuario"></strong></p>
-      <p class="detalhe">O modelo classificou como: <strong class="escolha-modelo"></strong></p>
-      <button class="botao btn-nova">Analisar outra notícia</button>
-    </div>
-  </section>
-
-  <script src="script.js"></script>
+  <script src="script.js?v=20261005-3"></script>
 </body>
 </html>
