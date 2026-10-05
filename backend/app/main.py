@@ -1,28 +1,36 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .schemas import AnalysisRequest, AnalysisResponse
 from .services.analysis_service import AnalysisService
 
-app = FastAPI(title="DUAT API", version="2.0.2")
+app = FastAPI(title="DUAT API", version="2.0.3")
 
-# O frontend atual roda em http://localhost:5500.
-# O navegador envia OPTIONS antes do POST /features.
+_default_origins = {
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5500",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5500",
+    "null",
+}
+_extra_origins = {
+    origin.strip().rstrip("/")
+    for origin in os.getenv("DUAT_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+}
+_allowed_origins = sorted(_default_origins | _extra_origins)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5500",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "http://127.0.0.1:5500",
-        "null",
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,7 +41,7 @@ service = AnalysisService()
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "duat"}
+    return {"status": "ok", "service": "duat", "cors_origins": _allowed_origins}
 
 
 @app.post("/api/v1/analyze", response_model=AnalysisResponse)
