@@ -1,48 +1,44 @@
-from typing import Dict, Literal, Optional
+from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
+from pydantic import BaseModel, Field, ConfigDict
 
-PipelineName = Literal[
-    'svm', 'kmeans', 'dbscan', 'isolation_forest',
-    'pipeline_kmeans_duat', 'duat_dbscan_isolation_forest',
-]
+Evaluation = Literal["v", "f", "n"]
 
+class AnalysisRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    user_evaluation: Evaluation = "n"
 
-class FeatureRequest(BaseModel):
-    text: str = Field(..., min_length=20, max_length=200000)
+class FeatureResult(BaseModel):
+    name: str
+    label: str
+    raw_value: float
+    scaled_value: float
 
+class CriterionResult(BaseModel):
+    name: str
+    label: str
+    importance: float
+    score: float
+    percentile: float
+    status: str
+    meaning: str
 
-class PredictionRequest(FeatureRequest):
-    pipeline: PipelineName = 'svm'
-    features: Optional[Dict[str, float]] = None
+class SVMResult(BaseModel):
+    prediction: Literal["falsa", "verdadeira"]
+    label: Literal[0, 1]
+    decision_distance: float
+    confidence_level: Literal["baixa", "moderada", "alta"] | None
 
-
-class PredictionResponse(BaseModel):
-    pipeline: str
-    label: Optional[int] = None
-    classification: str
-    fake_probability: Optional[float] = None
-    true_probability: Optional[float] = None
-    confidence: Optional[float] = None
-    decision_score: Optional[float] = None
-    input_valid: bool = True
-    label_mapping: Optional[dict] = None
-    features: Dict[str, float]
-    explanation: list[str]
-    model_loaded: bool
-    details: Optional[dict] = None
-
-
-class AnomalyRequest(FeatureRequest):
-    pipeline: Literal['dbscan', 'isolation_forest', 'duat_dbscan_isolation_forest'] = 'duat_dbscan_isolation_forest'
-    features: Optional[Dict[str, float]] = None
-
-
-class AnomalyResponse(BaseModel):
-    pipeline: str
-    anomaly: bool
-    score: Optional[float] = None
-    cluster: Optional[int] = None
-    features: Dict[str, float]
-    model_loaded: bool
-    details: Optional[dict] = None
+class AnalysisResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    word_count: int
+    short_text_warning: bool
+    profile: dict
+    features: list[FeatureResult]
+    priority_criteria: list[CriterionResult]
+    out_of_range_features: list[str]
+    svm: SVMResult
+    comparison: dict
+    class_comparison: list[dict]
+    warnings: list[str]

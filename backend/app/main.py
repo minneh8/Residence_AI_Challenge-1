@@ -1,65 +1,24 @@
-import os
+from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 
-from .schemas import AnomalyRequest, AnomalyResponse, FeatureRequest, PredictionRequest, PredictionResponse
-from .services.feature_extractor import extract_features
-from .services.predictor import Predictor
+from .schemas import AnalysisRequest, AnalysisResponse
+from .services.analysis_service import AnalysisService
 
-app = FastAPI(title='DUAT API', version='1.3.1')
-origins = [origin.strip() for origin in os.getenv('DUAT_CORS_ORIGINS', '*').split(',') if origin.strip()]
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False, allow_methods=['*'], allow_headers=['*'])
-
-predictor = Predictor()
+app = FastAPI(title="DUAT API", version="2.0.0")
+service = AnalysisService()
 
 
-@app.get('/')
-def root():
-    return {
-        'service': 'DUAT API',
-        'status': 'ok',
-        'docs': '/docs',
-        'health': '/health',
-        'pipelines': '/pipelines',
-    }
-
-
-@app.get('/health')
+@app.get("/health")
 def health():
-    return {'status': 'ok', 'pipelines': predictor.registry.status()}
+    return {"status": "ok", "service": "duat"}
 
 
-@app.get('/pipelines')
-def pipelines():
-    return {
-        'available': predictor.registry.available(),
-        'supported': predictor.registry.supported(),
-        'aliases': {'kmeans': 'pipeline_kmeans_duat', 'dbscan': 'duat_dbscan_isolation_forest', 'isolation_forest': 'duat_dbscan_isolation_forest'},
-        'status': predictor.registry.status(),
-    }
-
-
-@app.post('/features')
-def features(request: FeatureRequest):
-    return {'features': extract_features(request.text)}
-
-
-@app.post('/predict', response_model=PredictionResponse)
-def predict(request: PredictionRequest):
+@app.post("/api/v1/analyze", response_model=AnalysisResponse)
+def analyze(request: AnalysisRequest):
     try:
-        return predictor.predict(request.text, request.pipeline, request.features)
-    except ValueError as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
-    except Exception as error:
-        raise HTTPException(status_code=500, detail='Erro interno ao executar o pipeline.') from error
-
-
-@app.post('/anomaly', response_model=AnomalyResponse)
-def anomaly(request: AnomalyRequest):
-    try:
-        return predictor.anomaly(request.text, request.pipeline, request.features)
-    except ValueError as error:
-        raise HTTPException(status_code=422, detail=str(error)) from error
-    except Exception as error:
-        raise HTTPException(status_code=500, detail='Erro interno ao executar a análise de anomalias.') from error
+        return service.analyze(request.text, request.user_evaluation)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
