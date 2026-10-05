@@ -6,20 +6,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from .schemas import AnalysisRequest, AnalysisResponse
 from .services.analysis_service import AnalysisService
 
-app = FastAPI(title="DUAT API", version="2.0.1")
+app = FastAPI(title="DUAT API", version="2.0.2")
 
+# O frontend atual roda em http://localhost:5500.
+# O navegador envia OPTIONS antes do POST /features.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
+        "http://localhost:5500",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:5174",
+        "http://127.0.0.1:5500",
+        "null",
     ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
