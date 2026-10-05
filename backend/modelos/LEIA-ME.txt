@@ -1,0 +1,6 @@
+Coloque aqui:
+- pipeline_kmeans_duat.joblib
+- svm_bundle.joblib
+- DUAT_dataset.csv (dataset v2.1 com texto e rotulo)
+
+Os arquivos referencia_bruta.csv e limiares_svm.json sao gerados automaticamente na primeira execucao.

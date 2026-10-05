@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn>=0.29
+pandas
+numpy
+scipy
+joblib
+matplotlib
+scikit-learn==1.6.1
+spacy>=3.7
+pyspellchecker
