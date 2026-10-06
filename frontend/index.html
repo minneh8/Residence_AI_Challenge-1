@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DUAT · Clareza &amp; Confiança</title>
+  <link rel="icon" href="assets/logo-duat.png">
+  <link rel="stylesheet" href="styles.css?v=9">
+</head>
+<body>
+  <main id="app" class="inicio">
+    <header class="marca">
+      <img src="assets/logo-duat.png" alt="DUAT — Clareza &amp; Confiança" class="logo">
+    </header>
+
+    <form id="form-noticia" class="entrada" autocomplete="off">
+      <label for="texto" class="sr-only">Notícia</label>
+      <textarea id="texto" rows="1" placeholder="Digite sua notícia para ser avaliada..." required></textarea>
+      <button type="submit" id="enviar">Enviar</button>
+    </form>
+    <p class="dica">Cole o texto completo da notícia. Ctrl + Enter também envia.</p>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <section id="resultado" hidden>
+      <!-- 1. Perfil -->
+      <article class="cartao">
+        <h2>Perfil de escrita</h2>
+        <p class="perfil-nome" id="perfil-nome"></p>
+        <p id="perfil-descricao"></p>
+        <p class="nota">O perfil descreve o estilo do texto, e não a veracidade: os dois perfis têm notícias falsas e verdadeiras.</p>
+        <ul class="avisos" id="avisos"></ul>
+      </article>
+
+      <!-- 2. Tabela de critérios -->
+      <article class="cartao">
+        <h2>Critérios que mais importam neste perfil</h2>
+        <div class="tabela-rolagem">
+          <table>
+            <thead>
+              <tr><th>Critério</th><th class="num">Score (0 a 1)</th><th class="num">Percentil no perfil</th><th>Situação</th></tr>
+            </thead>
+            <tbody id="tabela"></tbody>
+          </table>
+        </div>
+        <details class="ajuda">
+          <summary>O que é o percentil?</summary>
+          <p>Imagine colocar em fila, do menor para o maior valor, todas as notícias do mesmo perfil de escrita. O percentil mostra em que ponto dessa fila a sua notícia está.</p>
+          <p><b>Exemplo:</b> percentil 70 significa que a notícia tem um valor maior do que cerca de 70 de cada 100 notícias do perfil.</p>
+          <ul>
+            <li><b>Perto de 50:</b> meio da fila, um valor típico.</li>
+            <li><b>Entre 25 e 75:</b> faixa comum, onde está a metade central das notícias. Quando muitas notícias têm o mesmo valor (por exemplo, zero), a faixa comum se ajusta e pode começar antes do 25.</li>
+            <li><b>Perto de 0 ou de 100:</b> valor incomum, muito baixo ou muito alto para o perfil.</li>
+          </ul>
+          <p>Estar fora da faixa comum não quer dizer que a notícia é falsa. É só um ponto de atenção para você avaliar.</p>
+        </details>
+        <div id="fora-do-comum"></div>
+      </article>
+
+      <!-- 3. Régua e radar -->
+      <article class="cartao">
+        <h2>Posição entre as notícias do mesmo perfil</h2>
+        <p class="nota">A faixa cinza é a metade central das notícias do perfil (normalmente do percentil 25 ao 75; quando muitas notícias têm o mesmo valor, ela se desloca).</p>
+        <div id="regua" class="regua"></div>
+        <div class="legenda">
+          <span><i class="ponto"></i>Notícia analisada</span>
+          <span><i class="barra comum"></i>Faixa dentro do comum (metade central das notícias do perfil)</span>
+        </div>
+      </article>
+
+      <article class="cartao">
+        <h2>Comparação com a notícia típica do perfil</h2>
+        <div id="radar" class="radar"></div>
+      </article>
+
+      <!-- 4. Avaliação do usuário -->
+      <article class="cartao destaque" id="pergunta">
+        <h2>Sua avaliação</h2>
+        <p>Com base nos critérios acima, como você avalia a notícia? A avaliação do modelo só aparece depois da sua resposta.</p>
+        <div class="opcoes">
+          <button type="button" data-resposta="verdadeira">Verdadeira</button>
+          <button type="button" data-resposta="falsa">Falsa</button>
+          <button type="button" data-resposta="nao_sei">Não sei</button>
+        </div>
+      </article>
+
+      <!-- 5. Avaliação do modelo -->
+      <section id="avaliacao" hidden>
+        <article class="cartao">
+          <h2>Avaliação do modelo (SVM)</h2>
+          <p class="veredito" id="veredito"></p>
+          <p class="nota" id="seguranca"></p>
+          <p id="comparacao"></p>
+          <div id="listas"></div>
+        </article>
+
+        <article class="cartao">
+          <h2>Onde ficam as notícias falsas e as verdadeiras deste perfil</h2>
+          <p class="nota">Barras: metade central de cada classe. Traço: mediana.</p>
+          <div id="regua-classe" class="regua"></div>
+          <div class="legenda">
+            <span><i class="ponto"></i>Notícia analisada</span>
+            <span><i class="barra falsa"></i>Notícias falsas do perfil</span>
+            <span><i class="barra verdadeira"></i>Notícias verdadeiras do perfil</span>
+          </div>
+        </article>
+
+        <p class="lembrete">O DUAT não é um verificador de fatos. Na dúvida, procure a notícia em veículos confiáveis ou em agências de checagem antes de compartilhar.</p>
+        <div class="centro"><button type="button" id="nova" class="secundario">Analisar outra notícia</button></div>
+      </section>
+    </section>
+  </main>
+  <script src="app.js?v=9"></script>
+</body>
+</html>
