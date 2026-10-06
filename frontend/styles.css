@@ -144,6 +144,11 @@ tr.detalhe p { margin: 2px 0; }
 .legenda .barra { width: 18px; height: 5px; border-radius: 3px; }
 .legenda .barra.falsa { background: var(--falsa); }
 .legenda .barra.verdadeira { background: var(--verdadeira); }
+/* mesma sobreposição do gráfico: faixa cinza por cima do trilho */
+.legenda .barra.comum {
+  background: linear-gradient(var(--faixa), var(--faixa)), linear-gradient(var(--trilho), var(--trilho));
+  height: 8px;
+}
 .legenda .tipica { width: 18px; border-top: 2px dashed var(--suave); }
 
 /* pergunta e veredito */
