@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DUAT · Clareza &amp; Confiança</title>
   <link rel="icon" href="assets/logo-duat.png">
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <main id="app" class="inicio">
@@ -49,7 +49,7 @@
           <p><b>Exemplo:</b> percentil 70 significa que a notícia tem um valor maior do que cerca de 70 de cada 100 notícias do perfil.</p>
           <ul>
             <li><b>Perto de 50:</b> meio da fila, um valor típico.</li>
-            <li><b>Entre 25 e 75:</b> faixa comum, onde está a metade central das notícias.</li>
+            <li><b>Entre 25 e 75:</b> faixa comum, onde está a metade central das notícias. Quando muitas notícias têm o mesmo valor (por exemplo, zero), a faixa comum se ajusta e pode começar antes do 25.</li>
             <li><b>Perto de 0 ou de 100:</b> valor incomum, muito baixo ou muito alto para o perfil.</li>
           </ul>
           <p>Estar fora da faixa comum não quer dizer que a notícia é falsa. É só um ponto de atenção para você avaliar.</p>
@@ -60,7 +60,7 @@
       <!-- 3. Régua e radar -->
       <article class="cartao">
         <h2>Posição entre as notícias do mesmo perfil</h2>
-        <p class="nota">A faixa cinza é a metade central das notícias do perfil (percentis 25 a 75).</p>
+        <p class="nota">A faixa cinza é a metade central das notícias do perfil (normalmente do percentil 25 ao 75; quando muitas notícias têm o mesmo valor, ela se desloca).</p>
         <div id="regua" class="regua"></div>
       </article>
 
@@ -106,6 +106,6 @@
       </section>
     </section>
   </main>
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

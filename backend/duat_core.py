@@ -167,12 +167,32 @@ def situacao(p):
     return 'abaixo do comum' if p < 25 else ('acima do comum' if p > 75 else 'dentro do comum')
 
 
+def situacao_valor(valores, v, tol=1e-12):
+    """Situação pelo VALOR: compara com o Q1 e o Q3 do perfil (metade central).
+    Sem empates dá o mesmo resultado que situacao(percentil); com muitos empates
+    (ex.: muitas notícias com zero), o valor empatado não é chamado de incomum
+    quando faz parte da metade central."""
+    q1, q3 = np.percentile(np.asarray(valores, dtype=float), [25, 75])
+    if v < q1 - tol:
+        return 'abaixo do comum'
+    if v > q3 + tol:
+        return 'acima do comum'
+    return 'dentro do comum'
+
+
+def faixa_tipica(valores):
+    """Metade central do perfil (Q1 a Q3) na escala de percentil da régua."""
+    valores = np.asarray(valores, dtype=float)
+    q1, q3 = np.percentile(valores, [25, 75])
+    return percentil(valores, q1), percentil(valores, q3)
+
+
 def tabela_criterios(perfil, noticia, ref_perfil):
     linhas = []
     for f, imp, explic in PERFIS[perfil]['criterios']:
         v = float(noticia[f].iloc[0]); p = percentil(ref_perfil[f], v)
         linhas.append({'Critério': NOMES[f], 'Importância': round(imp, 3), 'Score (0 a 1)': round(v, 4),
-                       'Percentil no perfil': int(round(p)), 'Situação': situacao(p), 'O que significa': explic})
+                       'Percentil no perfil': int(round(p)), 'Situação': situacao_valor(ref_perfil[f], v), 'O que significa': explic})
     return pd.DataFrame(linhas)
 
 
@@ -184,8 +204,10 @@ def regua(perfil, noticia, ref_perfil, por_classe=False, rotulo_ref=None):
         y = len(crit) - 1 - i
         p = percentil(ref_perfil[f], float(noticia[f].iloc[0]))
         ax.plot([0, 100], [y, y], color='#ededed', lw=8, solid_capstyle='butt', zorder=1)
+        sit = situacao_valor(ref_perfil[f], float(noticia[f].iloc[0]))
         if not por_classe:
-            ax.plot([25, 75], [y, y], color=COR_FAIXA, lw=8, solid_capstyle='butt', zorder=2)
+            a0, b0 = faixa_tipica(ref_perfil[f])
+            ax.plot([a0, max(b0, a0 + 1)], [y, y], color=COR_FAIXA, lw=8, solid_capstyle='butt', zorder=2)
         else:
             for cls, cor, dy in [(0, COR_FALSA, 0.13), (1, COR_VERDADEIRA, -0.13)]:
                 vals = ref_perfil.loc[rotulo_ref == cls, f]
@@ -195,7 +217,7 @@ def regua(perfil, noticia, ref_perfil, por_classe=False, rotulo_ref=None):
                 ax.plot([a, max(b, a + 1)], [y + dy, y + dy], color=cor, lw=5, alpha=0.75, solid_capstyle='butt', zorder=2)
                 ax.plot([m, m], [y + dy - 0.09, y + dy + 0.09], color='white', lw=2.6, zorder=3, solid_capstyle='butt')
                 ax.plot([m, m], [y + dy - 0.09, y + dy + 0.09], color=cor, lw=1.2, zorder=4, solid_capstyle='butt')
-        destaque = p < 25 or p > 75
+        destaque = sit != 'dentro do comum'
         ax.scatter([p], [y], s=90, color=COR_NOTICIA, zorder=5, edgecolor='white', linewidth=1)
         ax.text(p, y + 0.28, f'{p:.0f}', ha='center', fontsize=9, color='#333')
         if por_classe:
@@ -204,7 +226,7 @@ def regua(perfil, noticia, ref_perfil, por_classe=False, rotulo_ref=None):
             ax.text(102, y, txt, va='center', fontsize=9, fontweight='normal' if lado is None else 'bold',
                     color='#777' if lado is None else '#1a1a1a')
         else:
-            ax.text(102, y, situacao(p).replace(' do comum', '') + ' da faixa típica',
+            ax.text(102, y, sit.replace(' do comum', '') + ' da faixa típica',
                     va='center', fontsize=9, fontweight='bold' if destaque else 'normal',
                     color=COR_DESTAQUE if destaque else '#777')
     ax.set_yticks(range(len(crit)))

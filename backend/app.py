@@ -103,6 +103,14 @@ def _pct(serie, v):
     return round(float(dc.percentil(serie, v)), 1)
 
 
+def _proporcoes(serie, v):
+    """% das notícias do perfil com valor menor, igual e maior que o da notícia."""
+    vals = np.asarray(serie, dtype=float)
+    return {"menor": float(100 * np.mean(vals < v)),
+            "igual": float(100 * np.mean(vals == v)),
+            "maior": float(100 * np.mean(vals > v))}
+
+
 def _radar(perfil, noticia, ref_perfil):
     """Mesma escala do gráfico de radar do notebook: percentis 5 a 95 do perfil viram 0 a 1."""
     eixos, tipica, nova = [], [], []
@@ -168,6 +176,8 @@ def analisar(pedido: PedidoAnalise):
         "nome": r["Critério"],
         "score": float(r["Score (0 a 1)"]),
         "percentil": _pct(ref_perfil[f], float(noticia[f].iloc[0])),
+        "proporcoes": _proporcoes(ref_perfil[f], float(noticia[f].iloc[0])),
+        "faixa": [round(float(x), 1) for x in dc.faixa_tipica(ref_perfil[f])],
         "situacao": r["Situação"],
         "explicacao": r["O que significa"],
     } for f, (_, r) in zip(crit, tabela.iterrows())]

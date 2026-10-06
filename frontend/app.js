@@ -102,6 +102,24 @@ const FRASE_PERCENTIL = {
 };
 const frasePercentil = (c) => FRASE_PERCENTIL[c.feature] || `têm ${c.nome}`;
 
+// "menos de 1%" quando há alguma notícia, mas o valor arredondado daria 0
+const fmtPct = (v) => (v > 0 && v < 0.5 ? "menos de 1" : String(Math.round(v))) + "%";
+
+// frases que aparecem ao clicar no percentil; com empate, mostra também quantas têm o mesmo valor
+function linhasPercentil(c) {
+  const t = c.proporcoes;
+  if (!t) {  // backend antigo: só o percentil
+    const p = Math.round(c.percentil);
+    return [el("p", {}, `${p}% das notícias do perfil ${frasePercentil(c)} menor que a sua notícia`),
+            el("p", {}, `${100 - p}% das notícias do perfil ${frasePercentil(c)} maior que a sua notícia`)];
+  }
+  const linhas = [el("p", {}, `${fmtPct(t.menor)} das notícias do perfil ${frasePercentil(c)} menor que a sua notícia`)];
+  if (t.igual > 0)
+    linhas.push(el("p", {}, `${fmtPct(t.igual)} das notícias do perfil têm o mesmo valor que a sua notícia`));
+  linhas.push(el("p", {}, `${fmtPct(t.maior)} das notícias do perfil ${frasePercentil(c)} maior que a sua notícia`));
+  return linhas;
+}
+
 function renderAnalise(d) {
   $("#perfil-nome").textContent = d.perfil.nome;
   $("#perfil-descricao").textContent =
@@ -123,8 +141,7 @@ function renderAnalise(d) {
     const p = Math.round(c.percentil);
     const detalhe = el("tr", { class: "detalhe", hidden: "" },
       el("td", { colspan: "4" },
-        el("p", {}, `${p}% das notícias do perfil ${frasePercentil(c)} menor que a sua notícia`),
-        el("p", {}, `${100 - p}% das notícias do perfil ${frasePercentil(c)} maior que a sua notícia`)));
+        ...linhasPercentil(c)));
     const botao = el("button", { type: "button", class: "pct", "aria-expanded": "false",
       title: "Clique para ver o que significa" }, String(p));
     botao.addEventListener("click", () => {
@@ -155,6 +172,7 @@ function renderAnalise(d) {
   renderRegua($("#regua"), d.criterios.map((c) => ({
     nome: c.nome,
     percentil: c.percentil,
+    faixa: c.faixa,
     texto: SITUACAO[c.situacao],
     forte: c.situacao !== "dentro do comum",
   })));
@@ -174,7 +192,9 @@ function renderRegua(alvo, linhas, porClasse = false) {
   for (const l of linhas) {
     const trilho = el("div", { class: "trilho" });
     if (!porClasse) {
-      trilho.append(el("div", { class: "banda", style: { left: "25%", width: "50%" } }));
+      // metade central do perfil (Q1 a Q3); com muitos empates ela não fica em 25–75
+      const [ini, fim] = l.faixa || [25, 75];
+      trilho.append(el("div", { class: "banda", style: { left: ini + "%", width: Math.max(fim - ini, 1) + "%" } }));
     } else {
       for (const cls of ["falsas", "verdadeiras"]) {
         const f = l[cls];
