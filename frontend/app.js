@@ -81,6 +81,27 @@ const SITUACAO = {
   "acima do comum": "acima da faixa típica",
 };
 
+// trecho da frase do percentil, adaptado a cada critério
+const FRASE_PERCENTIL = {
+  tamanho_medio_palavra: "possuem o Tamanho médio da palavra",
+  pct_erro_ortografico: "têm uma porcentagem de Erros ortográficos",
+  fontes_proporcao: "têm uma proporção de Fontes citadas",
+  estudos_previos_proporcao: "têm uma proporção de Estudos prévios citados",
+  emotividade: "têm um nível de Emotividade",
+  sensacionalismo_proporcao: "têm uma proporção de Palavras sensacionalistas",
+  verbos_proporcao: "têm uma proporção de Verbos",
+  verbos_subj_imp_proporcao: "têm uma proporção de Verbos de dúvida ou de ordem",
+  substantivos_proporcao: "têm uma proporção de Substantivos",
+  adjetivos_proporcao: "têm uma proporção de Adjetivos",
+  adverbios_proporcao: "têm uma proporção de Advérbios",
+  modais_proporcao: "têm uma proporção de Verbos modais",
+  pronomes_proporcao: "têm uma proporção de Pronomes",
+  pausalidade: "têm um nível de Pausalidade",
+  indice_legibilidade: "possuem o Índice de legibilidade",
+  tamanho_medio_frase: "possuem o Tamanho médio da frase",
+};
+const frasePercentil = (c) => FRASE_PERCENTIL[c.feature] || `têm ${c.nome}`;
+
 function renderAnalise(d) {
   $("#perfil-nome").textContent = d.perfil.nome;
   $("#perfil-descricao").textContent =
@@ -99,13 +120,24 @@ function renderAnalise(d) {
   corpo.replaceChildren();
   for (const c of d.criterios) {
     const fora = c.situacao !== "dentro do comum";
+    const p = Math.round(c.percentil);
+    const detalhe = el("tr", { class: "detalhe", hidden: "" },
+      el("td", { colspan: "4" },
+        el("p", {}, `${p}% das notícias do perfil ${frasePercentil(c)} menor que a sua notícia`),
+        el("p", {}, `${100 - p}% das notícias do perfil ${frasePercentil(c)} maior que a sua notícia`)));
+    const botao = el("button", { type: "button", class: "pct", "aria-expanded": "false",
+      title: "Clique para ver o que significa" }, String(p));
+    botao.addEventListener("click", () => {
+      const aberto = detalhe.hidden;
+      detalhe.hidden = !aberto;
+      botao.setAttribute("aria-expanded", String(aberto));
+    });
     corpo.append(el("tr", {},
       el("td", {}, c.nome, el("span", { class: "explica" }, c.explicacao)),
-      el("td", { class: "num" }, c.importancia.toFixed(3)),
-      el("td", { class: "num" }, c.score.toFixed(4)),
-      el("td", { class: "num" }, Math.round(c.percentil)),
+      el("td", { class: "num" }, c.score != null ? c.score.toFixed(4) : "–"),
+      el("td", { class: "num" }, botao),
       el("td", { class: "situacao" + (fora ? " fora" : "") }, c.situacao),
-    ));
+    ), detalhe);
   }
 
   // mensagem de critérios fora do comum

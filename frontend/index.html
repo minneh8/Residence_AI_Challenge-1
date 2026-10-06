@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DUAT · Clareza &amp; Confiança</title>
   <link rel="icon" href="assets/logo-duat.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
   <main id="app" class="inicio">
@@ -38,11 +38,22 @@
         <div class="tabela-rolagem">
           <table>
             <thead>
-              <tr><th>Critério</th><th class="num">Importância</th><th class="num">Score (0 a 1)</th><th class="num">Percentil no perfil</th><th>Situação</th></tr>
+              <tr><th>Critério</th><th class="num">Score (0 a 1)</th><th class="num">Percentil no perfil</th><th>Situação</th></tr>
             </thead>
             <tbody id="tabela"></tbody>
           </table>
         </div>
+        <details class="ajuda">
+          <summary>O que é o percentil?</summary>
+          <p>Imagine colocar em fila, do menor para o maior valor, todas as notícias do mesmo perfil de escrita. O percentil mostra em que ponto dessa fila a sua notícia está.</p>
+          <p><b>Exemplo:</b> percentil 70 significa que a notícia tem um valor maior do que cerca de 70 de cada 100 notícias do perfil.</p>
+          <ul>
+            <li><b>Perto de 50:</b> meio da fila, um valor típico.</li>
+            <li><b>Entre 25 e 75:</b> faixa comum, onde está a metade central das notícias.</li>
+            <li><b>Perto de 0 ou de 100:</b> valor incomum, muito baixo ou muito alto para o perfil.</li>
+          </ul>
+          <p>Estar fora da faixa comum não quer dizer que a notícia é falsa. É só um ponto de atenção para você avaliar.</p>
+        </details>
         <div id="fora-do-comum"></div>
       </article>
 
@@ -95,6 +106,6 @@
       </section>
     </section>
   </main>
-  <script src="app.js"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

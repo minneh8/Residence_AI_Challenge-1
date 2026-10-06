@@ -165,7 +165,6 @@ def analisar(pedido: PedidoAnalise):
     criterios = [{
         "feature": f,
         "nome": r["Critério"],
-        "importancia": float(r["Importância"]),
         "score": float(r["Score (0 a 1)"]),
         "percentil": _pct(ref_perfil[f], float(noticia[f].iloc[0])),
         "situacao": r["Situação"],

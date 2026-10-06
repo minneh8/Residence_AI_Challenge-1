@@ -93,7 +93,21 @@ th { color: var(--suave); font-weight: 600; font-size: 13px; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 td .explica { display: block; color: var(--suave); font-size: 12.5px; margin-top: 2px; }
 .situacao { white-space: nowrap; }
+button.pct {
+  background: transparent; color: var(--laranja); border: 0; padding: 2px 6px;
+  font: inherit; font-weight: 700; text-decoration: underline dotted; text-underline-offset: 4px;
+}
+button.pct[aria-expanded="true"] { background: var(--campo); border-radius: 4px; }
+tr.detalhe[hidden] { display: none; }
+tr.detalhe td { background: var(--campo); color: var(--texto); font-size: 14px; }
+tr.detalhe p { margin: 2px 0; }
 .situacao.fora { font-weight: 700; }
+
+.ajuda { margin-top: 14px; font-size: 14px; color: var(--suave); }
+.ajuda summary { cursor: pointer; color: var(--laranja); font-weight: 600; }
+.ajuda p { margin: 8px 0 0; }
+.ajuda ul { margin: 8px 0 0; padding-left: 18px; }
+.ajuda b { color: var(--texto); }
 
 #fora-do-comum { margin-top: 14px; font-size: 14px; }
 #fora-do-comum ul { margin: 6px 0 0; padding-left: 18px; }
