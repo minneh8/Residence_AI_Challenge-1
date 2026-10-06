@@ -83,7 +83,8 @@ def carregar():
     if "rotulo" not in ref.columns or "texto" not in ref.columns:
         raise ValueError("O dataset de referência precisa das colunas 'texto' e 'rotulo'.")
     t1, t2 = _limiares_seguranca(svm, ref)
-    ESTADO.update(kmeans=kmeans, svm=svm, mapa=mapa, ref=ref, limiares=(t1, t2))
+    ref_norm = dc.normalizar_referencia(ref)  # régua fixa, calculada uma vez
+    ESTADO.update(kmeans=kmeans, svm=svm, mapa=mapa, ref=ref, ref_norm=ref_norm, limiares=(t1, t2))
     print(f"DUAT pronto: {len(ref)} notícias de referência.")
 
 
@@ -153,7 +154,7 @@ def analisar(pedido: PedidoAnalise):
 
     with TRAVA:
         ref = ESTADO["ref"]
-        bruta, noticia, ref_norm, fora = dc.extrair_e_escalar(texto, ref)
+        bruta, noticia, ref_norm, fora = dc.extrair_e_escalar(texto, ref, ESTADO["ref_norm"])
         perfil, _, ref_clusters = dc.perfil_da_noticia(ESTADO["kmeans"], ESTADO["mapa"], noticia, ref_norm)
 
     mascara = np.array([ESTADO["mapa"][c] == perfil for c in ref_clusters])

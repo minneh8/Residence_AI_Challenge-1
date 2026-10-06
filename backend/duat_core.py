@@ -94,8 +94,8 @@ def _esta_normalizado(df):
 
 def carregar_referencia_bruta(caminho_dataset, caminho_cache='referencia_bruta.csv'):
     """Devolve o dataset de referência (v2.1) em ESCALA BRUTA, com 'texto' e 'rotulo'.
-    A normalização min-max depende do mínimo e do máximo do dataset inteiro
-    (seção 2.4.2), por isso a notícia nova é sempre normalizada junto com ele."""
+    A normalização min-max usa o mínimo e o máximo deste dataset (seção 2.4.2);
+    a notícia nova é escalada com esses mesmos valores."""
     if Path(caminho_cache).exists():
         ref = pd.read_csv(caminho_cache)
         print(f'Referência bruta carregada do cache: {ref.shape[0]} notícias')
@@ -118,20 +118,37 @@ def carregar_referencia_bruta(caminho_dataset, caminho_cache='referencia_bruta.c
 
 
 # ---------------------------------------------------------------- extração e escala
-def extrair_e_escalar(texto, ref_bruta):
+def normalizar_referencia(ref_bruta):
+    """Normaliza o dataset de referência (min-max 0 a 1, como na documentação).
+    É a régua fixa: não muda com a notícia analisada."""
+    ref_norm = padronizar_dataframe(ref_bruta, verbose=False)
+    ref_norm[FEATURES] = ref_norm[FEATURES].astype(np.float64)  # float64, como no treinamento
+    return ref_norm
+
+
+def extrair_e_escalar(texto, ref_bruta, ref_norm=None):
     """1) extrai as features da notícia em escala bruta;
-    2) junta com o dataset de referência bruto e aplica a mesma normalização
-       min-max (0 a 1) da documentação, sobre o conjunto;
+    2) escala a notícia com o mínimo e o máximo do dataset de referência
+       (a referência não é recalculada); valores fora da faixa viram 0 ou 1;
     3) devolve a notícia e a referência já normalizadas."""
     nova_bruta = montar_dataset(pd.DataFrame({'texto': [texto]}), verbose=False)
-    conjunto = pd.concat([ref_bruta, nova_bruta], ignore_index=True)
-    conjunto_norm = padronizar_dataframe(conjunto, verbose=False)
-    conjunto_norm[FEATURES] = conjunto_norm[FEATURES].astype(np.float64)  # float64, como no treinamento
+    if ref_norm is None:
+        ref_norm = normalizar_referencia(ref_bruta)
+    noticia = nova_bruta.copy()
+    cols = [c for c in nova_bruta.select_dtypes(include=[np.number]).columns
+            if c in ref_bruta.columns and c != 'rotulo']
+    for c in cols:
+        minimo, maximo = ref_bruta[c].min(), ref_bruta[c].max()
+        amplitude = maximo - minimo
+        if amplitude == 0 or pd.isna(amplitude):
+            noticia[c] = 0.0
+        else:
+            noticia[c] = ((nova_bruta[c] - minimo) / amplitude).clip(0, 1)
+        noticia[c] = noticia[c].astype(np.float32)
+    noticia[FEATURES] = noticia[FEATURES].astype(np.float64)
     fora = [c for c in FEATURES
             if nova_bruta[c].iloc[0] < ref_bruta[c].min() or nova_bruta[c].iloc[0] > ref_bruta[c].max()]
-    noticia = conjunto_norm.iloc[[-1]].reset_index(drop=True)
-    ref_norm = conjunto_norm.iloc[:-1].reset_index(drop=True)
-    return nova_bruta, noticia, ref_norm, fora
+    return nova_bruta, noticia.reset_index(drop=True), ref_norm, fora
 
 
 # ---------------------------------------------------------------- perfil (K-Means)
