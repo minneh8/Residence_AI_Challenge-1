@@ -99,16 +99,11 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 
 # ---------------------------------------------------------------- utilidades
-def _pct(serie, v):
-    return round(float(dc.percentil(serie, v)), 1)
-
-
-def _proporcoes(serie, v):
-    """% das notícias do perfil com valor menor, igual e maior que o da notícia."""
+def _tipico(serie):
+    """Valor típico (mediana) e faixa comum (Q1 a Q3) do perfil, na mesma escala do score."""
     vals = np.asarray(serie, dtype=float)
-    return {"menor": float(100 * np.mean(vals < v)),
-            "igual": float(100 * np.mean(vals == v)),
-            "maior": float(100 * np.mean(vals > v))}
+    q1, med, q3 = np.percentile(vals, [25, 50, 75])
+    return {"mediana": round(float(med), 4), "q1": round(float(q1), 4), "q3": round(float(q3), 4)}
 
 
 def _radar(perfil, noticia, ref_perfil):
@@ -124,10 +119,21 @@ def _radar(perfil, noticia, ref_perfil):
     return {"eixos": eixos, "tipica": tipica, "noticia": nova}
 
 
-def _faixa(ref_perfil, f, vals):
-    q1, q3 = np.percentile(vals, [25, 75])
-    return {"q1": _pct(ref_perfil[f], q1), "q3": _pct(ref_perfil[f], q3),
-            "mediana": _pct(ref_perfil[f], float(vals.median()))}
+def _escala(serie, rotulo):
+    """Escala da régua de cada critério, no valor (não no percentil).
+    Vai do percentil 5 ao 95 do perfil (cobre 90% das notícias; mesma escala do radar)
+    e é alargada, se preciso, para caber a metade central das falsas e das verdadeiras.
+    É a mesma nas duas réguas, para que possam ser comparadas."""
+    vals = np.asarray(serie, dtype=float)
+    lo, hi = (float(x) for x in np.percentile(vals, [5, 95]))
+    for cls in (0, 1):
+        sub = vals[rotulo == cls]
+        if len(sub):
+            q1, q3 = np.percentile(sub, [25, 75])
+            lo, hi = min(lo, float(q1)), max(hi, float(q3))
+    if hi - lo < 1e-4:
+        hi = lo + 1e-4
+    return [round(lo, 4), round(hi, 4)]
 
 
 def _guardar(dados):
@@ -175,9 +181,8 @@ def analisar(pedido: PedidoAnalise):
         "feature": f,
         "nome": r["Critério"],
         "score": float(r["Score (0 a 1)"]),
-        "percentil": _pct(ref_perfil[f], float(noticia[f].iloc[0])),
-        "proporcoes": _proporcoes(ref_perfil[f], float(noticia[f].iloc[0])),
-        "faixa": [round(float(x), 1) for x in dc.faixa_tipica(ref_perfil[f])],
+        "tipico": _tipico(ref_perfil[f]),
+        "escala": _escala(ref_perfil[f], rotulo_perfil),
         "situacao": r["Situação"],
         "explicacao": r["O que significa"],
     } for f, (_, r) in zip(crit, tabela.iterrows())]
@@ -231,9 +236,10 @@ def avaliar(pedido: PedidoAvaliacao):
         lado = lados[f]
         por_classe.append({
             "nome": dc.NOMES[f],
-            "percentil": _pct(ref_perfil[f], float(noticia[f].iloc[0])),
-            "falsas": _faixa(ref_perfil, f, ref_perfil.loc[rotulo == 0, f]),
-            "verdadeiras": _faixa(ref_perfil, f, ref_perfil.loc[rotulo == 1, f]),
+            "score": round(float(noticia[f].iloc[0]), 4),
+            "escala": _escala(ref_perfil[f], rotulo),
+            "falsas": _tipico(ref_perfil.loc[rotulo == 0, f]),
+            "verdadeiras": _tipico(ref_perfil.loc[rotulo == 1, f]),
             "lado": {0: "falsas", 1: "verdadeiras", None: None}[lado],
         })
 

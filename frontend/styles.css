@@ -7,11 +7,11 @@
   --laranja-logo: #fe6d02;
   --texto: #e7ecf6;
   --suave: #9fb0d1;
-  --trilho: rgba(255, 255, 255, 0.08);
-  --faixa: rgba(255, 255, 255, 0.24);
-  --noticia: #7aa7ff;
-  --falsa: #e5605c;
-  --verdadeira: #3fb97a;
+  --trilho: rgba(255, 255, 255, 0.26);
+  --faixa: rgba(255, 255, 255, 0.62);
+  --noticia: #8db8ff;
+  --falsa: #f0716d;
+  --verdadeira: #4cc98a;
   --raio: 6px;
 }
 
@@ -93,14 +93,6 @@ th { color: var(--suave); font-weight: 600; font-size: 13px; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 td .explica { display: block; color: var(--suave); font-size: 12.5px; margin-top: 2px; }
 .situacao { white-space: nowrap; }
-button.pct {
-  background: transparent; color: var(--laranja); border: 0; padding: 2px 6px;
-  font: inherit; font-weight: 700; text-decoration: underline dotted; text-underline-offset: 4px;
-}
-button.pct[aria-expanded="true"] { background: var(--campo); border-radius: 4px; }
-tr.detalhe[hidden] { display: none; }
-tr.detalhe td { background: var(--campo); color: var(--texto); font-size: 14px; }
-tr.detalhe p { margin: 2px 0; }
 .situacao.fora { font-weight: 700; }
 
 .ajuda { margin-top: 14px; font-size: 14px; color: var(--suave); }
@@ -114,34 +106,36 @@ tr.detalhe p { margin: 2px 0; }
 
 /* régua */
 .regua { margin-top: 14px; }
-.linha-regua { display: grid; grid-template-columns: 200px 1fr 190px; gap: 14px; align-items: center; min-height: 44px; }
-.rotulo-regua { text-align: right; font-size: 14px; }
+.linha-regua { display: grid; grid-template-columns: 220px 1fr 190px; gap: 14px; align-items: center; min-height: 64px; }
+.rotulo-regua { text-align: right; font-size: 15px; color: var(--texto); }
 .trilho { position: relative; height: 26px; }
 .trilho::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 8px; background: var(--trilho); border-radius: 4px; }
 .trilho .banda { position: absolute; top: 9px; height: 8px; background: var(--faixa); }
-.trilho .classe { position: absolute; height: 6px; border-radius: 3px; opacity: .85; }
-.trilho .classe.falsa { top: 4px; background: var(--falsa); }
+.trilho .classe { position: absolute; height: 8px; border-radius: 4px; }
+.trilho .classe.falsa { top: 2px; background: var(--falsa); }
 .trilho .classe.verdadeira { top: 16px; background: var(--verdadeira); }
-.trilho .mediana { position: absolute; width: 2px; height: 10px; background: var(--fundo); margin-left: -1px; }
+.trilho .mediana { position: absolute; width: 3px; height: 10px; background: #fff; margin-left: -1.5px; border-radius: 1px; box-shadow: 0 0 0 1px var(--fundo); }
 .trilho .ponto {
-  position: absolute; top: 5px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
-  background: var(--noticia); border: 2px solid var(--fundo); z-index: 2;
+  position: absolute; top: 4px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%;
+  background: var(--noticia); border: 2px solid #f2f5fb; z-index: 3;
 }
-.trilho .valor { position: absolute; top: -14px; transform: translateX(-50%); font-size: 11.5px; color: var(--suave); }
-.lado { font-size: 13.5px; }
+.trilho .valor { position: absolute; top: -18px; transform: translateX(-50%); font-size: 13px; font-weight: 600; color: var(--texto); white-space: nowrap; }
+.trilho .traco-tipico { position: absolute; top: 4px; width: 3px; height: 18px; margin-left: -1.5px; background: #fff; border-radius: 1px; z-index: 2; box-shadow: 0 0 0 1.5px var(--fundo); }
+.trilho .extremo { position: absolute; top: 28px; font-size: 11.5px; color: var(--suave); }
+.trilho .extremo.ini { left: 0; }
+.trilho .extremo.fim { right: 0; }
+.lado { font-size: 14px; }
 .lado.forte { font-weight: 700; }
-.lado.fraco { color: var(--suave); }
-.eixo { display: grid; grid-template-columns: 200px 1fr 190px; gap: 14px; }
-.eixo .marcas { position: relative; height: 18px; border-top: 1px solid var(--linha); font-size: 11.5px; color: var(--suave); }
-.eixo .marcas span { position: absolute; transform: translateX(-50%); top: 2px; }
+.lado.fraco { color: #b9c6e0; }
 
 /* radar */
 .radar { display: flex; justify-content: center; }
-.radar svg { width: 100%; max-width: 640px; height: auto; }
-.legenda { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; font-size: 13px; color: var(--suave); margin-top: 14px; }
+.radar > div { width: 100%; max-width: 680px; }
+.radar svg { width: 100%; height: auto; display: block; }
+.legenda { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; font-size: 14px; color: #c3cee3; margin-top: 14px; }
 .legenda i { display: inline-block; vertical-align: middle; margin-right: 6px; }
-.legenda .ponto { width: 11px; height: 11px; border-radius: 50%; background: var(--noticia); }
-.legenda .barra { width: 18px; height: 5px; border-radius: 3px; }
+.legenda .ponto { width: 13px; height: 13px; border-radius: 50%; background: var(--noticia); border: 1.5px solid #f2f5fb; }
+.legenda .barra { width: 20px; height: 8px; border-radius: 4px; }
 .legenda .barra.falsa { background: var(--falsa); }
 .legenda .barra.verdadeira { background: var(--verdadeira); }
 /* mesma sobreposição do gráfico: faixa cinza por cima do trilho */
@@ -149,7 +143,11 @@ tr.detalhe p { margin: 2px 0; }
   background: linear-gradient(var(--faixa), var(--faixa)), linear-gradient(var(--trilho), var(--trilho));
   height: 8px;
 }
-.legenda .tipica { width: 18px; border-top: 2px dashed var(--suave); }
+.legenda .tipica { width: 18px; border-top: 2px dashed #dfe6f3; }
+.legenda .traco { width: 3px; height: 14px; background: #fff; border-radius: 1px; }
+
+.painel { margin-top: 14px; }
+.painel .regua { margin-top: 0; }
 
 /* pergunta e veredito */
 .opcoes { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
@@ -168,8 +166,8 @@ tr.detalhe p { margin: 2px 0; }
 @media (max-width: 680px) {
   .entrada { flex-direction: column; align-items: stretch; }
   #enviar { width: 100%; }
-  .linha-regua, .eixo { grid-template-columns: 1fr; gap: 2px; }
+  .linha-regua { grid-template-columns: 1fr; gap: 2px; padding-top: 14px; }
+  .linha-regua .trilho { margin: 24px 0 18px; }
   .rotulo-regua { text-align: left; }
-  .eixo > span:first-child, .eixo > span:last-child { display: none; }
   .cartao { padding: 16px; }
 }

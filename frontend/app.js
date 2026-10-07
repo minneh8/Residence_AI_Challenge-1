@@ -75,50 +75,9 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-const SITUACAO = {
-  "abaixo do comum": "abaixo da faixa típica",
-  "dentro do comum": "dentro da faixa típica",
-  "acima do comum": "acima da faixa típica",
-};
 
-// trecho da frase do percentil, adaptado a cada critério
-const FRASE_PERCENTIL = {
-  tamanho_medio_palavra: "possuem o Tamanho médio da palavra",
-  pct_erro_ortografico: "têm uma porcentagem de Erros ortográficos",
-  fontes_proporcao: "têm uma proporção de Fontes citadas",
-  estudos_previos_proporcao: "têm uma proporção de Estudos prévios citados",
-  emotividade: "têm um nível de Emotividade",
-  sensacionalismo_proporcao: "têm uma proporção de Palavras sensacionalistas",
-  verbos_proporcao: "têm uma proporção de Verbos",
-  verbos_subj_imp_proporcao: "têm uma proporção de Verbos de dúvida ou de ordem",
-  substantivos_proporcao: "têm uma proporção de Substantivos",
-  adjetivos_proporcao: "têm uma proporção de Adjetivos",
-  adverbios_proporcao: "têm uma proporção de Advérbios",
-  modais_proporcao: "têm uma proporção de Verbos modais",
-  pronomes_proporcao: "têm uma proporção de Pronomes",
-  pausalidade: "têm um nível de Pausalidade",
-  indice_legibilidade: "possuem o Índice de legibilidade",
-  tamanho_medio_frase: "possuem o Tamanho médio da frase",
-};
-const frasePercentil = (c) => FRASE_PERCENTIL[c.feature] || `têm ${c.nome}`;
-
-// "menos de 1%" quando há alguma notícia, mas o valor arredondado daria 0
-const fmtPct = (v) => (v > 0 && v < 0.5 ? "menos de 1" : String(Math.round(v))) + "%";
-
-// frases que aparecem ao clicar no percentil; com empate, mostra também quantas têm o mesmo valor
-function linhasPercentil(c) {
-  const t = c.proporcoes;
-  if (!t) {  // backend antigo: só o percentil
-    const p = Math.round(c.percentil);
-    return [el("p", {}, `${p}% das notícias do perfil ${frasePercentil(c)} menor que a sua notícia`),
-            el("p", {}, `${100 - p}% das notícias do perfil ${frasePercentil(c)} maior que a sua notícia`)];
-  }
-  const linhas = [el("p", {}, `${fmtPct(t.menor)} das notícias do perfil ${frasePercentil(c)} menor que a sua notícia`)];
-  if (t.igual > 0)
-    linhas.push(el("p", {}, `${fmtPct(t.igual)} das notícias do perfil têm o mesmo valor que a sua notícia`));
-  linhas.push(el("p", {}, `${fmtPct(t.maior)} das notícias do perfil ${frasePercentil(c)} maior que a sua notícia`));
-  return linhas;
-}
+// números no formato brasileiro, com 4 casas (os scores são pequenos, ex.: 0,0158)
+const fmt = (v) => (v == null ? "–" : v.toLocaleString("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 }));
 
 function renderAnalise(d) {
   $("#perfil-nome").textContent = d.perfil.nome;
@@ -138,23 +97,14 @@ function renderAnalise(d) {
   corpo.replaceChildren();
   for (const c of d.criterios) {
     const fora = c.situacao !== "dentro do comum";
-    const p = Math.round(c.percentil);
-    const detalhe = el("tr", { class: "detalhe", hidden: "" },
-      el("td", { colspan: "4" },
-        ...linhasPercentil(c)));
-    const botao = el("button", { type: "button", class: "pct", "aria-expanded": "false",
-      title: "Clique para ver o que significa" }, String(p));
-    botao.addEventListener("click", () => {
-      const aberto = detalhe.hidden;
-      detalhe.hidden = !aberto;
-      botao.setAttribute("aria-expanded", String(aberto));
-    });
+    const t = c.tipico || {};
     corpo.append(el("tr", {},
       el("td", {}, c.nome, el("span", { class: "explica" }, c.explicacao)),
-      el("td", { class: "num" }, c.score != null ? c.score.toFixed(4) : "–"),
-      el("td", { class: "num" }, botao),
+      el("td", { class: "num" }, fmt(c.score)),
+      el("td", { class: "num" }, fmt(t.mediana)),
+      el("td", { class: "num" }, `${fmt(t.q1)} a ${fmt(t.q3)}`),
       el("td", { class: "situacao" + (fora ? " fora" : "") }, c.situacao),
-    ), detalhe);
+    ));
   }
 
   // mensagem de critérios fora do comum
@@ -166,14 +116,12 @@ function renderAnalise(d) {
   } else {
     caixa.append(el("strong", {}, "Critérios que fogem do comum para notícias deste perfil:"));
     caixa.append(el("ul", {}, ...foraLista.map((c) =>
-      el("li", {}, `${c.nome}: ${c.situacao} (percentil ${Math.round(c.percentil)}).`))));
+      el("li", {}, `${c.nome}: ${c.situacao} (score ${fmt(c.score)}; faixa comum de ${fmt(c.tipico.q1)} a ${fmt(c.tipico.q3)}).`))));
   }
 
   renderRegua($("#regua"), d.criterios.map((c) => ({
-    nome: c.nome,
-    percentil: c.percentil,
-    faixa: c.faixa,
-    texto: SITUACAO[c.situacao],
+    ...c,
+    texto: c.situacao,
     forte: c.situacao !== "dentro do comum",
   })));
   renderRadar($("#radar"), d.radar);
@@ -187,27 +135,43 @@ function renderAnalise(d) {
 }
 
 // ---------------------------------------------------------------- régua
+// Cada linha tem a sua própria escala, no VALOR do critério (não no percentil):
+// vai do valor baixo ao valor alto mais comuns no perfil (90% das notícias cabem na linha).
 function renderRegua(alvo, linhas, porClasse = false) {
   alvo.replaceChildren();
   for (const l of linhas) {
+    const [lo, hi] = l.escala;
+    const pos = (v) => Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100));
     const trilho = el("div", { class: "trilho" });
+
     if (!porClasse) {
-      // metade central do perfil (Q1 a Q3); com muitos empates ela não fica em 25–75
-      const [ini, fim] = l.faixa || [25, 75];
-      trilho.append(el("div", { class: "banda", style: { left: ini + "%", width: Math.max(fim - ini, 1) + "%" } }));
+      // metade central do perfil (Q1 a Q3) e o valor típico (mediana)
+      const t = l.tipico;
+      trilho.append(
+        el("div", { class: "banda", style: { left: pos(t.q1) + "%", width: Math.max(pos(t.q3) - pos(t.q1), 0.8) + "%" } }),
+        el("div", { class: "traco-tipico", style: { left: pos(t.mediana) + "%" }, title: `Típico (mediana): ${fmt(t.mediana)}` }),
+      );
     } else {
       for (const cls of ["falsas", "verdadeiras"]) {
         const f = l[cls];
         const nome = cls === "falsas" ? "falsa" : "verdadeira";
-        const larg = Math.max(f.q3 - f.q1, 1);
-        const barra = el("div", { class: `classe ${nome}`, style: { left: f.q1 + "%", width: larg + "%" } });
-        const topo = cls === "falsas" ? 2 : 14;
-        trilho.append(barra, el("div", { class: "mediana", style: { left: f.mediana + "%", top: topo + "px" } }));
+        const topo = cls === "falsas" ? 1 : 15;
+        trilho.append(
+          el("div", { class: `classe ${nome}`, style: { left: pos(f.q1) + "%", width: Math.max(pos(f.q3) - pos(f.q1), 0.8) + "%" },
+            title: `${cls === "falsas" ? "Falsas" : "Verdadeiras"}: metade central de ${fmt(f.q1)} a ${fmt(f.q3)}` }),
+          el("div", { class: "mediana", style: { left: pos(f.mediana) + "%", top: topo + "px" }, title: `Mediana: ${fmt(f.mediana)}` }),
+        );
       }
     }
+
+    // a notícia; fora da escala, o ponto fica na borda e a seta indica o lado
+    const p = pos(l.score);
+    const rotulo = l.score > hi ? `${fmt(l.score)} →` : l.score < lo ? `← ${fmt(l.score)}` : fmt(l.score);
     trilho.append(
-      el("div", { class: "ponto", style: { left: l.percentil + "%" }, title: `Percentil ${Math.round(l.percentil)}` }),
-      el("span", { class: "valor", style: { left: l.percentil + "%" } }, String(Math.round(l.percentil))),
+      el("div", { class: "ponto", style: { left: p + "%" }, title: `Sua notícia: ${fmt(l.score)}` }),
+      el("span", { class: "valor", style: { left: Math.min(Math.max(p, 6), 94) + "%" } }, rotulo),
+      el("span", { class: "extremo ini" }, fmt(lo)),
+      el("span", { class: "extremo fim" }, fmt(hi)),
     );
     alvo.append(el("div", { class: "linha-regua" },
       el("span", { class: "rotulo-regua" }, l.nome),
@@ -215,9 +179,6 @@ function renderRegua(alvo, linhas, porClasse = false) {
       el("span", { class: "lado " + (l.forte ? "forte" : "fraco") }, l.texto),
     ));
   }
-  const marcas = el("div", { class: "marcas" },
-    ...[0, 25, 50, 75, 100].map((v) => el("span", { style: { left: v + "%" } }, String(v))));
-  alvo.append(el("div", { class: "eixo" }, el("span"), marcas, el("span")));
 }
 
 // ---------------------------------------------------------------- radar
@@ -228,7 +189,7 @@ function renderRadar(alvo, r) {
     for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
     return n;
   };
-  const W = 680, H = 470, cx = W / 2, cy = H / 2, R = 165, max = 1.15;
+  const W = 780, H = 520, cx = W / 2, cy = H / 2, R = 185, max = 1.15;
   const n = r.eixos.length;
   const ang = (i) => -Math.PI / 2 + (2 * Math.PI * i) / n;
   const pt = (i, v) => [cx + (R * v / max) * Math.cos(ang(i)), cy + (R * v / max) * Math.sin(ang(i))];
@@ -236,35 +197,35 @@ function renderRadar(alvo, r) {
 
   const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Radar: notícia analisada sobre a notícia típica do perfil" });
   for (const anel of [0.25, 0.5, 0.75, 1]) {
-    svg.append(s("polygon", { points: poli(Array(n).fill(anel)), fill: "none", stroke: "rgba(255,255,255,.12)" }));
+    svg.append(s("polygon", { points: poli(Array(n).fill(anel)), fill: "none", stroke: "rgba(255,255,255,.42)" }));
   }
   r.eixos.forEach((nome, i) => {
     const [x, y] = pt(i, max);
-    svg.append(s("line", { x1: cx, y1: cy, x2: x, y2: y, stroke: "rgba(255,255,255,.12)" }));
+    svg.append(s("line", { x1: cx, y1: cy, x2: x, y2: y, stroke: "rgba(255,255,255,.42)" }));
     const [lx, ly] = pt(i, max * 1.2);
     const cos = Math.cos(ang(i));
     const anchor = Math.abs(cos) < 0.2 ? "middle" : cos > 0 ? "start" : "end";
-    const t = s("text", { x: lx, y: ly, "text-anchor": anchor, fill: "#e7ecf6", "font-size": 14 });
+    const t = s("text", { x: lx, y: ly, "text-anchor": anchor, fill: "#f2f5fb", "font-size": 16 });
     const partes = nome.split(" ");
     const meio = Math.ceil(partes.length / 2);
-    const linhas = partes.length > 2 ? [partes.slice(0, meio).join(" "), partes.slice(meio).join(" ")] : [nome];
+    const linhas = partes.length > 2 || (partes.length === 2 && nome.length > 16) ? [partes.slice(0, meio).join(" "), partes.slice(meio).join(" ")] : [nome];
     linhas.forEach((txt, k) => {
-      const ts = s("tspan", { x: lx, dy: k === 0 ? (linhas.length > 1 ? -4 : 4) : 16 });
+      const ts = s("tspan", { x: lx, dy: k === 0 ? (linhas.length > 1 ? -5 : 5) : 18 });
       ts.textContent = txt;
       t.append(ts);
     });
     svg.append(t);
   });
-  svg.append(s("polygon", { points: poli(r.tipica), fill: "rgba(255,255,255,.10)", stroke: "#9fb0d1", "stroke-width": 1.5, "stroke-dasharray": "5 4" }));
-  svg.append(s("polygon", { points: poli(r.noticia), fill: "rgba(122,167,255,.20)", stroke: "#7aa7ff", "stroke-width": 2.2 }));
+  svg.append(s("polygon", { points: poli(r.tipica), fill: "rgba(255,255,255,.14)", stroke: "#eef2fa", "stroke-width": 2, "stroke-dasharray": "6 4" }));
+  svg.append(s("polygon", { points: poli(r.noticia), fill: "rgba(141,184,255,.30)", stroke: "#8db8ff", "stroke-width": 3 }));
   r.noticia.forEach((v, i) => {
     const [x, y] = pt(i, v);
-    svg.append(s("circle", { cx: x, cy: y, r: 3.5, fill: "#7aa7ff" }));
+    svg.append(s("circle", { cx: x, cy: y, r: 5.5, fill: "#8db8ff", stroke: "#fff", "stroke-width": 2 }));
   });
 
   const legenda = el("div", { class: "legenda" },
     el("span", {}, el("i", { class: "tipica" }), "Notícia típica do perfil (mediana)"),
-    el("span", {}, el("i", { class: "ponto" }), "Notícia analisada"));
+    el("span", {}, el("i", { class: "ponto" }), "Sua notícia"));
   alvo.replaceChildren(el("div", {}, svg, legenda));
 }
 
