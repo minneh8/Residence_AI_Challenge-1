@@ -143,7 +143,7 @@ td .explica { display: block; color: var(--suave); font-size: 12.5px; margin-top
   background: linear-gradient(var(--faixa), var(--faixa)), linear-gradient(var(--trilho), var(--trilho));
   height: 8px;
 }
-.legenda .tipica { width: 18px; border-top: 2px dashed #dfe6f3; }
+.legenda .tipica { width: 22px; border-top: 3px dashed #ffd166; }
 .legenda .traco { width: 3px; height: 14px; background: #fff; border-radius: 1px; }
 
 .painel { margin-top: 14px; }

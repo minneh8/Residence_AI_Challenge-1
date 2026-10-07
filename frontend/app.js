@@ -196,12 +196,15 @@ function renderRadar(alvo, r) {
   const poli = (vals) => vals.map((v, i) => pt(i, v).join(",")).join(" ");
 
   const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Radar: notícia analisada sobre a notícia típica do perfil" });
+  // teia: fundo levemente mais claro, anéis e eixos bem visíveis (o anel de fora é o mais forte)
+  svg.append(s("polygon", { points: poli(Array(n).fill(1)), fill: "rgba(255,255,255,.06)", stroke: "none" }));
   for (const anel of [0.25, 0.5, 0.75, 1]) {
-    svg.append(s("polygon", { points: poli(Array(n).fill(anel)), fill: "none", stroke: "rgba(255,255,255,.42)" }));
+    svg.append(s("polygon", { points: poli(Array(n).fill(anel)), fill: "none",
+      stroke: anel === 1 ? "rgba(255,255,255,.85)" : "rgba(255,255,255,.55)", "stroke-width": anel === 1 ? 2 : 1.4 }));
   }
   r.eixos.forEach((nome, i) => {
     const [x, y] = pt(i, max);
-    svg.append(s("line", { x1: cx, y1: cy, x2: x, y2: y, stroke: "rgba(255,255,255,.42)" }));
+    svg.append(s("line", { x1: cx, y1: cy, x2: x, y2: y, stroke: "rgba(255,255,255,.55)", "stroke-width": 1.4 }));
     const [lx, ly] = pt(i, max * 1.2);
     const cos = Math.cos(ang(i));
     const anchor = Math.abs(cos) < 0.2 ? "middle" : cos > 0 ? "start" : "end";
@@ -216,8 +219,15 @@ function renderRadar(alvo, r) {
     });
     svg.append(t);
   });
-  svg.append(s("polygon", { points: poli(r.tipica), fill: "rgba(255,255,255,.14)", stroke: "#eef2fa", "stroke-width": 2, "stroke-dasharray": "6 4" }));
+  // notícia típica em amarelo: contorno desenhado por cima da notícia para não sumir
+  const AMARELO = "#ffd166";
+  svg.append(s("polygon", { points: poli(r.tipica), fill: "rgba(255,209,102,.16)", stroke: "none" }));
   svg.append(s("polygon", { points: poli(r.noticia), fill: "rgba(141,184,255,.30)", stroke: "#8db8ff", "stroke-width": 3 }));
+  svg.append(s("polygon", { points: poli(r.tipica), fill: "none", stroke: AMARELO, "stroke-width": 3, "stroke-dasharray": "8 5" }));
+  r.tipica.forEach((v, i) => {
+    const [x, y] = pt(i, v);
+    svg.append(s("rect", { x: x - 4.5, y: y - 4.5, width: 9, height: 9, fill: AMARELO, stroke: "#14244a", "stroke-width": 1.5 }));
+  });
   r.noticia.forEach((v, i) => {
     const [x, y] = pt(i, v);
     svg.append(s("circle", { cx: x, cy: y, r: 5.5, fill: "#8db8ff", stroke: "#fff", "stroke-width": 2 }));
@@ -269,7 +279,7 @@ function renderAvaliacao(d) {
       listas.append(el("p", {}, el("strong", {}, `Se parece com as notícias ${classe} deste perfil: `), itens.join(", ") + "."));
   }
 
-  const TXT = { falsas: "mais perto das falsas", verdadeiras: "mais perto das verdadeiras" };
+  const TXT = { falsas: "tende para falsa", verdadeiras: "tende para verdadeira" };
   renderRegua($("#regua-classe"), d.por_classe.map((c) => ({
     ...c,
     texto: c.lado ? TXT[c.lado] : "não distingue as classes",
