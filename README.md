@@ -1,167 +1,166 @@
-# 🛡️ DUAT - Development Universal Artificial Technology
-> **Residência em IA — Instituto Eldorado**  
-> *Projeto focado em análise, explicabilidade e promoção do pensamento crítico sobre confiabilidade da informação.*
+# 🧠 DUAT
+
+**DUAT** é um sistema de inteligência artificial desenvolvido para o **Residence AI Challenge**. O projeto combina um backend em Python/Flask, responsável pelo processamento dos dados e inferência dos modelos, com uma interface web leve e intuitiva construída em HTML, CSS e JavaScript.
 
 ---
 
-## 📌 1. Visão Geral do Projeto (Challenge Statement)
-O objetivo principal deste projeto é desenvolver um sistema inteligente que analisa dados textuais/noticiosos e exibe métricas claras de transparência para **auxiliar o usuário a avaliar a confiabilidade da informação**, diferenciando desinformação (intencional) de desinformação acidental/erro (misinformation vs. disinformation) e fomentando a autonomia crítica.
+## ✨ Visão geral
 
-O sistema **não atua como "árbitro da verdade" absoluto**; em vez disso, fornece pistas contextuais, checagem de fontes e destaques textuais para guiar a reflexão do próprio usuário.
+O DUAT foi estruturado para receber entradas do usuário pela interface web, transformá-las em features utilizáveis pelos modelos e gerar uma resposta/predição por meio do pipeline de inferência.
 
----
+A arquitetura é dividida em duas camadas:
 
-## 🎯 2. Escopo & Entregas do Challenge
-
-| Entrega | Descrição | Status |
-|---|---|---|
-| **Algoritmo de Classificação** | Pipeline de IA com modelos supervisionados (KNN, SVM, Random Forest) e não supervisionados (K-Means, DBSCAN, Apriori). | `Em Definição` |
-| **Protótipo Funcional / Produto Educacional** | Interface/dashboard para interação direta do usuário. | `Em Definição` |
-| **Validação com Usuários Reais** | Testes empíricos com público-alvo (16–60 anos) e coleta de feedback. | `Pendente` |
-| **Evidências de Impacto** | Análise de métricas de uso e ganho no senso crítico dos usuários. | `Pendente` |
-| **Documentação Completa** | Registro de todas as fases, decisões arquiteturais e relatórios. | `Em Progresso` |
+- **Backend** — API Flask que coordena o pipeline, a extração de features e o carregamento dos modelos.
+- **Frontend** — interface web estática que consome a API e apresenta os resultados de forma clara.
 
 ---
 
-## 🧠 3. Pipeline de Inteligência Artificial & Dados
-
-### 3.1. Dados & Pré-processamento
-- **Fonte dos Dados:** [Fake.br Corpus](https://github.com/roneysco/Fake.br-Corpus) — dataset público de notícias em português com rótulos de veracidade.
-- **Metodologia de Limpeza de Dados:**
-  - Remoção de duplicatas.
-  - Validação dos dados.
-  - Remoção de outliers.
-  - Padronização de proporções (4 casas decimais).
-  - Undersampling para balanceamento de classes.
-
-### 3.2. Modelagem & Algoritmos
-- **Aprendizado Supervisionado:**
-  - **KNN (K-Nearest Neighbors):** Baseline simples e interpretável.
-  - **SVM (Support Vector Machine):** Eficaz em alta dimensionalidade com TF-IDF.
-  - **Random Forest:** Robusto a overfitting e captura de relações não-lineares.
-- **Aprendizado Não Supervisionado:**
-  - **K-Means:** Agrupamento de notícias similares.
-  - **DBSCAN:** Identificação de clusters densos e outliers.
-  - **Apriori:** Descoberta de regras de associação entre features.
-
-### 3.3. Métricas de Avaliação
-- **Classificação:** Acurácia, Precisão, Recall, F1-score, Matriz de Confusão.
-- **Regressão:** MAE (Mean Absolute Error).
-- **Clustering:** Métricas internas de qualidade de agrupamento (a definir).
-
----
-
-## 📊 4. Visualização de Dados & UX
-Para garantir interpretabilidade e clareza aos usuários, o sistema integrará pelo menos **3 técnicas de visualização**:
-1. **Histogramas:** Distribuição de variáveis numéricas (ex.: número de palavras, proporção de types).
-2. **Gráficos de Barras:** Comparação de métricas entre classes (ex.: precisão por modelo).
-3. **Matriz de Confusão:** Visualização de VP, VN, FP, FN para cada modelo.
-
-* **Bibliotecas/Frameworks previstos:** Matplotlib, Seaborn, Plotly (a definir).
-
----
-
-## 👥 5. Impacto Social, Ética e Pensamento Crítico
-
-* **Comunidade Atendida:** 16–60 anos.
-* **Promoção do Pensamento Crítico:** O sistema não emite veredito absoluto; apresenta critérios calculáveis (ex.: credibilidade da fonte, estrutura textual, proporção de palavras sensacionalistas) para que o usuário tome sua própria decisão.
-* **Ética & Transparência (XAI):**
-  * Uso de explicabilidade (XAI) para justificar a pontuação gerada.
-  * Preservação da privacidade dos dados e conformidade com a LGPD.
-  * Mitigação ativa de vieses ideológicos, regionais e algorítmicos.
-
----
-
-## ⚙️ 6. Metodologia & Gestão de Projeto
-* **Metodologia Ágil:** Scrum com sprints semanais (7 sprints no total), adaptado com quadro Kanban no GitHub Projects (To Do, In Progress, Review, Done).
-* **Controle de Versão:** GitHub.
-* **Linguagem Principal:** Python 3.14.7.
-
----
-
-## 🚀 7. Como Executar o Projeto
-
-```bash
-# 1. Clonar o repositório
-git clone [https://github.com/minneh8/Residence_AI_Challenge-1](https://github.com/minneh8/Residence_AI_Challenge-1)
-
-# 2. Acessar a pasta
-cd Residence_AI_Challenge-1
-
-# 3. Criar e ativar ambiente virtual
-python -m venv venv
-# Linux/Mac:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
-
-# 4. Instalar dependências
-pip install -r requirements.txt
-
-# 5. Rodar a aplicação / protótipo
-python main.py
-```
-
----
-
-## 📁 8. Estrutura do Repositório
+## 🏗️ Arquitetura
 
 ```text
-Residence_AI_Challenge-1/
-│
-├── dataset_duat_final.csv
-├── montar_dataset_duat.py
-├── README.md
-├── LICENSE
-└── .gitignore
+┌──────────────┐        requisição         ┌──────────────────┐
+│   Frontend   │ ────────────────────────► │   Backend Flask  │
+│  HTML/CSS/JS │                           │                  │
+└──────────────┘ ◄──────────────────────── └──────────────────┘
+                        resposta                    │
+                                                    ▼
+                                        ┌────────────────────────┐
+                                        │  Extração de features  │
+                                        └────────────────────────┘
+                                                    │
+                                                    ▼
+                                        ┌────────────────────────┐
+                                        │     Núcleo DUAT        │
+                                        └────────────────────────┘
+                                                    │
+                                                    ▼
+                                        ┌────────────────────────┐
+                                        │   Modelos treinados    │
+                                        └────────────────────────┘
 ```
 
-### Descrição dos Arquivos
+---
 
-| Arquivo | Descrição |
+## 📁 Estrutura do projeto
+
+```text
+DUAT/
+├── backend/
+│   ├── app.py                  # API Flask e rotas principais
+│   ├── duat_core.py            # Núcleo de processamento e inferência
+│   ├── extracao_features.py    # Extração e preparação de features
+│   └── modelos/                # Modelos e artefatos treinados
+├── frontend/
+│   ├── index.html              # Página principal
+│   ├── app.js                  # Lógica da interface e chamadas à API
+│   ├── styles.css              # Estilização
+│   └── assets/                 # Recursos estáticos
+├── requirements.txt            # Dependências Python
+├── LICENSE
+└── README.md
+```
+
+---
+
+## 🚀 Como executar
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/minneh8/Residence_AI_Challenge-1.git
+cd Residence_AI_Challenge-1
+```
+
+### 2. Crie e ative um ambiente virtual
+
+```bash
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+# Linux/macOS
+source .venv/bin/activate
+```
+
+### 3. Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Inicie o backend
+
+```bash
+cd backend
+python app.py
+```
+
+A API normalmente ficará disponível em:
+
+```text
+http://127.0.0.1:5000
+```
+
+### 5. Abra o frontend
+
+Você pode abrir diretamente:
+
+```text
+frontend/index.html
+```
+
+Ou servir a pasta com um servidor estático:
+
+```bash
+cd frontend
+python -m http.server 5500
+```
+
+E acessar:
+
+```text
+http://127.0.0.1:5500
+```
+
+---
+
+## ⚙️ Fluxo de funcionamento
+
+1. O usuário interage com a interface no frontend.
+2. O frontend envia os dados para a API Flask.
+3. O backend processa a entrada e extrai as features necessárias.
+4. O núcleo DUAT coordena o pipeline de inferência.
+5. O modelo treinado é utilizado para gerar o resultado.
+6. A resposta é retornada ao frontend e exibida ao usuário.
+
+---
+
+## 🧩 Principais módulos
+
+| Módulo | Responsabilidade |
 |---|---|
-| `dataset_duat_final.csv` | Dataset final utilizado nos experimentos. |
-| `montar_dataset_duat.py` | Script Python responsável pela montagem e preparação do dataset. |
-| `README.md` | Documentação do projeto. |
-| `LICENSE` | Licença de uso do projeto. |
-| `.gitignore` | Arquivos e pastas ignorados pelo Git. |
+| `backend/app.py` | API Flask, rotas e integração com o frontend |
+| `backend/duat_core.py` | Lógica central e pipeline de inferência do DUAT |
+| `backend/extracao_features.py` | Tratamento dos dados e extração de features |
+| `backend/modelos/` | Armazenamento dos modelos treinados |
+| `frontend/app.js` | Controle da interface e comunicação com a API |
+| `frontend/index.html` | Estrutura visual da aplicação |
+| `frontend/styles.css` | Estilização e identidade visual |
 
 ---
 
-## 📚 9. Referências
+## 🛠️ Tecnologias
 
-1. Fake.br Corpus. Disponível em: [https://github.com/roneysco/Fake.br-Corpus](https://github.com/roneysco/Fake.br-Corpus).
-2. TJPR - O perigo das Fake News. Disponível em: [https://www.tjpr.jus.br](https://www.tjpr.jus.br).
-3. FLESCH, Rudolf. *A new readability yardstick*. Journal of Applied Psychology, 1948.
-4. Textstat (Python Package). Disponível em: [https://pypi.org/project/textstat/](https://pypi.org/project/textstat/).
-5. SILVA, R. M. et al. *Fake.br-Corpus: um corpus para detecção de notícias falsas em português*. GitHub / USP, 2018.
-6. MONTEIRO, R. A. et al. *Contributions to Natural Language Processing applied to Fake News Detection*. Information Sciences, 2018.
-7. Biber, D. *Análise multidimensional: os números na Linguística*.
-8. NLPNet (GitHub). Disponível em: [https://github.com/erickrf/nlpnet](https://github.com/erickrf/nlpnet).
+- Python
+- Flask
+- Machine Learning
+- HTML5
+- CSS3
+- JavaScript
 
 ---
 
-## 👨‍💻 10. Equipe
+## 📄 Licença
 
-**Integrantes:**
-- Guilherme Leal
-- Leonardo Varela Vacari
-- Luís Comenale
-- Lucas Marassi
-- Lucas Minneh
-- Murillo Caravita
-- Pedro Henrique Bonetto da Costa
-
-**Repositório:** [https://github.com/minneh8/Residence_AI_Challenge-1](https://github.com/minneh8/Residence_AI_Challenge-1)
-
----
-
-## 📝 11. Status Atual
-
-- ✅ Dataset inicial documentado e criterios definido.
-- ✅ Técnicas de limpeza de dados definidas (undersampling, one-hot, TF-IDF).
-- ✅ Algoritmos supervisionados testados (KNN, SVM, Random Forest).
-- ✅ Algoritmos não supervisionados selecionados (K-Means, DBSCAN, Apriori).
-- ⏳ Ajuste fino de hiperparâmetros em andamento.
-- ⏳ Protótipo funcional em desenvolvimento.
-- ⏳ Validação com usuários reais pendente.
+Este projeto está licenciado sob os termos do arquivo [LICENSE](./LICENSE).
