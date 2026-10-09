@@ -1,10 +1,10 @@
-# 🧠 DUAT
+# DUAT — Development of Universal Architecture Technology
 
-**DUAT** é um sistema de inteligência artificial desenvolvido para o **Residence AI Challenge**. O projeto combina um backend em Python/Flask, responsável pelo processamento dos dados e inferência dos modelos, com uma interface web leve e intuitiva construída em HTML, CSS e JavaScript.
+**DUAT (Development of Universal Architecture Technology)** é um sistema de inteligência artificial desenvolvido para o **Residence AI Challenge**. O projeto combina um backend em Python/Flask, responsável pelo processamento dos dados e inferência dos modelos, com uma interface web leve e intuitiva construída em HTML, CSS e JavaScript.
 
 ---
 
-## ✨ Visão geral
+## Visão geral
 
 O DUAT foi estruturado para receber entradas do usuário pela interface web, transformá-las em features utilizáveis pelos modelos e gerar uma resposta/predição por meio do pipeline de inferência.
 
@@ -15,7 +15,7 @@ A arquitetura é dividida em duas camadas:
 
 ---
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 ```text
 ┌──────────────┐        requisição         ┌──────────────────┐
@@ -41,7 +41,7 @@ A arquitetura é dividida em duas camadas:
 
 ---
 
-## 📁 Estrutura do projeto
+## Estrutura do projeto
 
 ```text
 DUAT/
@@ -62,7 +62,7 @@ DUAT/
 
 ---
 
-## 🚀 Como executar
+## Como executar
 
 ### 1. Clone o repositório
 
@@ -125,7 +125,7 @@ http://127.0.0.1:5500
 
 ---
 
-## ⚙️ Fluxo de funcionamento
+## Fluxo de funcionamento
 
 1. O usuário interage com a interface no frontend.
 2. O frontend envia os dados para a API Flask.
@@ -136,7 +136,7 @@ http://127.0.0.1:5500
 
 ---
 
-## 🧩 Principais módulos
+## Principais módulos
 
 | Módulo | Responsabilidade |
 |---|---|
@@ -150,7 +150,7 @@ http://127.0.0.1:5500
 
 ---
 
-## 🛠️ Tecnologias
+## Tecnologias
 
 - Python
 - Flask
@@ -161,6 +161,6 @@ http://127.0.0.1:5500
 
 ---
 
-## 📄 Licença
+## Licença
 
 Este projeto está licenciado sob os termos do arquivo [LICENSE](./LICENSE).
